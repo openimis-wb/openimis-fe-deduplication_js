@@ -4,8 +4,10 @@ import {
   buildResolveInput,
   candidateFilterFragment,
   candidateFilters,
+  canCreateReviewTasks,
   canResolve,
   evidenceRows,
+  hasOpenTask,
   keepOptions,
   scoreLabel,
   siblingState,
@@ -101,6 +103,34 @@ test('canResolve needs an OPEN candidate and right 172003, as number or string',
   assert.equal(canResolve({ ...candidate, status: 'DISMISSED' }, [172003]), false);
   assert.equal(canResolve(candidate, [172005]), false);
   assert.equal(canResolve(candidate, undefined), false);
+});
+
+test('canResolve refuses a candidate whose review task is still open', () => {
+  assert.equal(canResolve({ ...candidate, task: { id: 't1', status: 'RECEIVED' } }, [172003]), false);
+  assert.equal(canResolve({ ...candidate, task: { id: 't1', status: 'ACCEPTED' } }, [172003]), false);
+  assert.equal(canResolve({ ...candidate, task: { id: 't1', status: 'COMPLETED' } }, [172003]), true);
+  assert.equal(canResolve({ ...candidate, task: { id: 't1', status: 'FAILED' } }, [172003]), true);
+  assert.equal(canResolve({ ...candidate, task: null }, [172003]), true);
+});
+
+test('hasOpenTask is true only for a RECEIVED or ACCEPTED task', () => {
+  assert.equal(hasOpenTask({ task: { status: 'RECEIVED' } }), true);
+  assert.equal(hasOpenTask({ task: { status: 'ACCEPTED' } }), true);
+  assert.equal(hasOpenTask({ task: { status: 'COMPLETED' } }), false);
+  assert.equal(hasOpenTask({ task: null }), false);
+  assert.equal(hasOpenTask(null), false);
+});
+
+test('canCreateReviewTasks needs every selected row OPEN without an open task', () => {
+  const open = { ...candidate, task: null };
+  const closedTask = { ...candidate, id: 'rel-2', task: { id: 't2', status: 'FAILED' } };
+  assert.equal(canCreateReviewTasks([open]), true);
+  assert.equal(canCreateReviewTasks([open, closedTask]), true);
+  assert.equal(canCreateReviewTasks([]), false);
+  assert.equal(canCreateReviewTasks(null), false);
+  assert.equal(canCreateReviewTasks([open, { ...candidate, id: 'rel-3', status: 'CONFIRMED' }]), false);
+  assert.equal(canCreateReviewTasks([open, { ...candidate, id: 'rel-4', status: 'DISMISSED' }]), false);
+  assert.equal(canCreateReviewTasks([open, { ...candidate, id: 'rel-5', task: { id: 't5', status: 'RECEIVED' } }]), false);
 });
 
 test('keepOptions lists the pair', () => {

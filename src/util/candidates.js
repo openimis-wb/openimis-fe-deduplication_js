@@ -43,8 +43,24 @@ export function keepOptions(candidate) {
   return [candidate.subjectA, candidate.subjectB];
 }
 
+// tasks_management TaskStatus values of a task still awaiting a decision.
+export const OPEN_TASK_STATUSES = ['RECEIVED', 'ACCEPTED'];
+
+export function hasOpenTask(candidate) {
+  return OPEN_TASK_STATUSES.includes(candidate?.task?.status);
+}
+
+// An OPEN candidate whose decision is not already pending in a review task.
+export function isAwaitingDecision(candidate) {
+  return candidate?.status === STATUS_OPEN && !hasOpenTask(candidate);
+}
+
+export function canCreateReviewTasks(selection) {
+  return Array.isArray(selection) && selection.length > 0 && selection.every(isAwaitingDecision);
+}
+
 export function canResolve(candidate, rights) {
-  return candidate?.status === STATUS_OPEN && hasRight(rights, RESOLVE_RIGHT);
+  return isAwaitingDecision(candidate) && hasRight(rights, RESOLVE_RIGHT);
 }
 
 // Throws 'invalid_decision' or 'keep_not_in_pair'. Returns the keep to send:

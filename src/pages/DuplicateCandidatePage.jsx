@@ -19,7 +19,7 @@ import {
   ADMIN_STORE_KEY, MODULE_KEY, RIGHT_BIOMETRIC_READ, RIGHT_DUPLICATE_SEARCH,
 } from '../constants';
 import {
-  canResolve, evidenceRows, scoreLabel, siblingState,
+  canResolve, evidenceRows, hasOpenTask, scoreLabel, siblingState, STATUS_OPEN,
 } from '../util/candidates';
 import {
   hasRight, isUuid, labelOr, toUuid,
@@ -106,7 +106,7 @@ function DuplicateCandidatePage() {
         <Typography variant="h6">{formatMessage('candidate.title')}</Typography>
         <Chip
           label={formatMessage(`candidate.status.${candidate.status}`)}
-          color={candidate.status === 'OPEN' ? 'primary' : 'default'}
+          color={candidate.status === STATUS_OPEN ? 'primary' : 'default'}
         />
         <Chip variant="outlined" label={kindLabel} />
         <Typography variant="body2">
@@ -188,6 +188,9 @@ function DuplicateCandidatePage() {
           </>
         )}
         <Grid size={12}>
+          {candidate.status === STATUS_OPEN && hasOpenTask(candidate) && (
+            <Alert severity="info">{formatMessage('candidate.pendingTask')}</Alert>
+          )}
           {canResolve(candidate, rights) && (
             <ResolvePanel
               key={`${candidate.id}-${candidate.status}`}
@@ -196,7 +199,7 @@ function DuplicateCandidatePage() {
               submitting={!!submitting}
             />
           )}
-          {candidate.status !== 'OPEN' && (
+          {candidate.status !== STATUS_OPEN && (
             <StyledCard>
               <Typography variant="subtitle1" gutterBottom>{formatMessage('candidate.decision')}</Typography>
               <Typography variant="body2">

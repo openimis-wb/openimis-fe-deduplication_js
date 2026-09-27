@@ -86,3 +86,9 @@ export const AUDIT_HEAD_QUERY = `query BiometricAuditHead {
     edges { node { id sequence hash createdAt } }
   }
 }`;
+
+export const CANDIDATE_STATUS_QUERY = `query DuplicateCandidateStatus($id: ID) {
+  duplicateCandidates(id: $id, first: 1) {
+    edges { node { id status reviewedBy reviewedAt } }
+  }
+}`;

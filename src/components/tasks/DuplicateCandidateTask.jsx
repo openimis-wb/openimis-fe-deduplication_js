@@ -12,8 +12,12 @@ import {
 import { useModulesManager, useTranslations } from '@openimis/fe-core';
 import { useIntl } from 'react-intl';
 import { MODULE_KEY } from '../../constants';
-import { DECISION_DIFFERENT, DECISION_SAME, evidenceRows } from '../../util/candidates';
-import { isPlainObject, labelOr, parseJson } from '../../util/gql';
+import { useGqlQuery } from '../../hooks';
+import { CANDIDATE_STATUS_QUERY } from '../../queries';
+import {
+  DECISION_DIFFERENT, DECISION_SAME, STATUS_OPEN, evidenceRows,
+} from '../../util/candidates';
+import { isPlainObject, isUuid, labelOr, parseJson } from '../../util/gql';
 import {
   buildTaskResolution,
   decodeCompletedResolution,
@@ -23,25 +27,42 @@ import SubjectCard from '../candidates/SubjectCard';
 
 // Review form of a deduplication_candidate task. The decision goes to the task
 // as additionalData; completing the task resolves the candidate server-side.
+// A candidate already resolved elsewhere turns the form read-only and sends no
+// decision. When its status cannot be read, the form stays open.
 function DuplicateCandidateTaskDisplay({ businessData, jsonExt, setAdditionalData }) {
   const intl = useIntl();
   const modulesManager = useModulesManager();
-  const { formatMessage, formatMessageWithValues } = useTranslations(MODULE_KEY, modulesManager);
+  const { formatMessage, formatMessageWithValues, formatDateTimeFromISO } = useTranslations(
+    MODULE_KEY,
+    modulesManager,
+  );
   const [decision, setDecision] = React.useState(null);
   const [keep, setKeep] = React.useState(null);
   const [note, setNote] = React.useState('');
 
   const data = parseJson(businessData);
   const recorded = decodeCompletedResolution(parseJson(jsonExt));
+  const candidateUuid = isPlainObject(data) && isUuid(data.id) ? data.id : null;
+  const { data: statusData } = useGqlQuery(
+    CANDIDATE_STATUS_QUERY,
+    { id: candidateUuid },
+    { skip: !!recorded || !candidateUuid },
+  );
+  const current = statusData?.duplicateCandidates?.edges?.[0]?.node ?? null;
+  const resolvedElsewhere = !recorded && !!current && current.status !== STATUS_OPEN;
 
   React.useEffect(() => {
     if (recorded || !setAdditionalData || !isPlainObject(data)) return;
+    if (resolvedElsewhere) {
+      setAdditionalData(null);
+      return;
+    }
     try {
       setAdditionalData(encodeAdditionalData(buildTaskResolution({ decision, keep, note }, data)));
     } catch {
       setAdditionalData(null);
     }
-  }, [decision, keep, note]);
+  }, [decision, keep, note, resolvedElsewhere]);
 
   if (!isPlainObject(data) || !data.subject_a || !data.subject_b) return null;
 
@@ -74,7 +95,16 @@ function DuplicateCandidateTaskDisplay({ businessData, jsonExt, setAdditionalDat
           </Grid>
         ))}
       </Grid>
-      {recorded ? (
+      {resolvedElsewhere && (
+        <Alert severity="warning" sx={{ mt: 2 }}>
+          {formatMessageWithValues('tasks.candidate.alreadyResolved', {
+            status: formatMessage(`candidate.status.${current.status}`),
+            by: current.reviewedBy || '—',
+            at: current.reviewedAt ? formatDateTimeFromISO(current.reviewedAt) : '—',
+          })}
+        </Alert>
+      )}
+      {recorded && (
         <Alert severity="info" sx={{ mt: 2 }}>
           {formatMessageWithValues(
             recorded.decision === DECISION_SAME
@@ -83,7 +113,8 @@ function DuplicateCandidateTaskDisplay({ businessData, jsonExt, setAdditionalDat
             { keep: recorded.keep ?? '—', note: recorded.note || '—' },
           )}
         </Alert>
-      ) : (
+      )}
+      {!recorded && !resolvedElsewhere && (
         <Box mt={2}>
           <Typography variant="subtitle2">{formatMessage('tasks.candidate.decision')}</Typography>
           <RadioGroup value={decision ?? ''} onChange={(e) => setDecision(e.target.value)}>

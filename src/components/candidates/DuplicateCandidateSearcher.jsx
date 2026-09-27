@@ -17,7 +17,7 @@ import {
   RIGHT_DUPLICATE_REVIEW_TASKS,
 } from '../../constants';
 import { candidatesPageSize, rowsPerPageOptions } from '../../config';
-import { candidateFilterFragment, scoreLabel } from '../../util/candidates';
+import { canCreateReviewTasks, candidateFilterFragment, scoreLabel } from '../../util/candidates';
 import { hasRight, labelOr, toUuid } from '../../util/gql';
 import { useAdminSlice } from '../common/adminHooks';
 import DuplicateCandidateFilter from './DuplicateCandidateFilter';
@@ -99,6 +99,7 @@ function DuplicateCandidateSearcher({ rights, defaultSubjectId = null }) {
   };
 
   const createReviewTasks = (selection) => {
+    if (!canCreateReviewTasks(selection)) return;
     const uuids = selection.map((c) => toUuid(c.id)).filter(Boolean);
     if (!uuids.length) return;
     dispatch(createDuplicateReviewTasks(
@@ -112,7 +113,7 @@ function DuplicateCandidateSearcher({ rights, defaultSubjectId = null }) {
     ? [{
       label: `${MODULE_KEY}.candidates.action.createReviewTasks`,
       action: createReviewTasks,
-      enabled: (selection) => selection.length > 0,
+      enabled: canCreateReviewTasks,
     }]
     : [];
 
