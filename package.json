@@ -12,6 +12,7 @@
   },
   "scripts": {
     "build": "vite build",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test 'test/**/*.test.js'",
     "start": "vite",
     "format": "prettier src -w",
     "prepare": "npm run build"

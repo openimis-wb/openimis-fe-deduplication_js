@@ -7,6 +7,39 @@ It is dedicated to be bootstrap development of [openimis-fe_js](https://github.c
 
 Please refer to [openimis-fe_js](https://github.com/openimis/openimis-fe_js) to see how to build and and deploy (in developement or server mode).
 
+## Duplicate review and biometric administration
+
+| Screen | Route | Rights | Backend fields |
+|---|---|---|---|
+| Duplicate candidates | `deduplication/candidates` | 172005; 172004 runs a scan; 172001 creates review tasks | `duplicateCandidates`, `runDuplicateScan`, `createDuplicateReviewTasks` |
+| Duplicate candidate | `deduplication/candidates/candidate/<uuid>` | 172005; 172003 resolves | `duplicateCandidates(id:)`, `resolveDuplicateCandidate`, `individual(id:)` |
+| Biometric alerts | `deduplication/biometric/alerts` | 174005; 174006 acknowledges and resolves | `biometricAlerts`, `acknowledgeBiometricAlert`, `resolveBiometricAlert` |
+| Biometric audit log | `deduplication/biometric/audit` | 174005 | `biometricAuditEvents` |
+| Individual "Biometrics" tab | fe-individual `individual.TabPanel.*` | 174004 | `biometricTemplates` with `qualityVerdict` |
+
+Tasks with source `deduplication_candidate` get a review form in the task screen. The decision is stored as the task's
+additional data; completing the task resolves the candidate on the server.
+
+Subject cards come from the `deduplication.SubjectCard` contribution, a list of `{ subjectModel, component }`. The
+module contributes the card for `individual.Individual`; other subject models show their model name and id.
+
+Configuration keys (`fe-deduplication`):
+
+| Key | Default |
+|---|---|
+| `candidateKinds` | `["demographic", "identifier", "biometric"]` |
+| `candidatesPageSize` | `10` |
+| `rowsPerPageOptions` | `[10, 20, 50, 100]` |
+| `biometricAdmin.enabled` | `true`; `false` removes the alert and audit screens and the individual tab |
+| `alertRuleKinds` | `["FAILED_VERIFICATIONS", "IMPERSONATION_SUSPECTED", "ACCESS_BURST"]`; an empty list hides the rule filter |
+| `rights.auditRead` | `[174005]` |
+| `rights.alertTriage` | `[174006]` |
+
+A deployment that stores its menus in the `fe-core.menus` configuration shows the new menu entries only once they are
+added there.
+
+`yarn test` runs the unit tests of the pure helpers in `src/util` with the Node test runner.
+
 The module is built with [rollup](https://rollupjs.org/).
 In development mode, you can use `yarn link` and `yarn start` to continuously scan for changes and automatically update your development server.
 
