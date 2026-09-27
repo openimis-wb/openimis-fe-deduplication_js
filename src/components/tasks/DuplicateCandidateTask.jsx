@@ -14,16 +14,16 @@ import { useIntl } from 'react-intl';
 import { MODULE_KEY } from '../../constants';
 import { useGqlQuery } from '../../hooks';
 import { CANDIDATE_STATUS_QUERY } from '../../queries';
-import {
-  DECISION_DIFFERENT, DECISION_SAME, STATUS_OPEN, evidenceRows,
-} from '../../util/candidates';
+import { DECISION_DIFFERENT, DECISION_SAME, evidenceRows } from '../../util/candidates';
 import {
   isPlainObject, isUuid, labelOr, parseJson,
 } from '../../util/gql';
 import {
+  TASK_FORM_RESOLVED_ELSEWHERE,
   buildTaskResolution,
   decodeCompletedResolution,
-  encodeAdditionalData,
+  taskAdditionalData,
+  taskFormMode,
 } from '../../util/taskResolveData';
 import SubjectCard from '../candidates/SubjectCard';
 
@@ -51,20 +51,14 @@ function DuplicateCandidateTaskDisplay({ businessData, jsonExt, setAdditionalDat
     { skip: !!recorded || !candidateUuid },
   );
   const current = statusData?.duplicateCandidates?.edges?.[0]?.node ?? null;
-  const resolvedElsewhere = !recorded && !!current && current.status !== STATUS_OPEN;
+  const mode = taskFormMode(recorded, current);
+  const resolvedElsewhere = mode === TASK_FORM_RESOLVED_ELSEWHERE;
 
   React.useEffect(() => {
-    if (recorded || !setAdditionalData || !isPlainObject(data)) return;
-    if (resolvedElsewhere) {
-      setAdditionalData(null);
-      return;
-    }
-    try {
-      setAdditionalData(encodeAdditionalData(buildTaskResolution({ decision, keep, note }, data)));
-    } catch {
-      setAdditionalData(null);
-    }
-  }, [decision, keep, note, resolvedElsewhere]);
+    if (!setAdditionalData) return;
+    const additionalData = taskAdditionalData(mode, { decision, keep, note }, data);
+    if (additionalData !== undefined) setAdditionalData(additionalData);
+  }, [decision, keep, note, mode]);
 
   if (!isPlainObject(data) || !data.subject_a || !data.subject_b) return null;
 

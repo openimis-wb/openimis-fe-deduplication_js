@@ -1,9 +1,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  TASK_FORM_OPEN,
+  TASK_FORM_RECORDED,
+  TASK_FORM_RESOLVED_ELSEWHERE,
   buildTaskResolution,
   decodeCompletedResolution,
   encodeAdditionalData,
+  taskAdditionalData,
+  taskFormMode,
 } from '../src/util/taskResolveData.js';
 
 const A = '11111111-1111-4111-8111-111111111111';
@@ -42,4 +47,49 @@ test('buildTaskResolution keeps a subject of the pair only', () => {
   assert.throws(() => buildTaskResolution({ decision: 'same', keep: C }, businessData), { message: 'keep_not_in_pair' });
   assert.throws(() => buildTaskResolution({ decision: 'same' }, businessData), { message: 'keep_not_in_pair' });
   assert.throws(() => buildTaskResolution({ decision: 'merge', keep: A }, businessData), { message: 'invalid_decision' });
+});
+
+const recordedSame = { decision: 'same', keep: A, note: 'ok' };
+const filledForm = { decision: 'same', keep: A, note: 'ok' };
+
+test('taskFormMode turns read-only once the candidate is resolved elsewhere', () => {
+  assert.equal(taskFormMode(null, { status: 'CONFIRMED' }), TASK_FORM_RESOLVED_ELSEWHERE);
+  assert.equal(taskFormMode(null, { status: 'DISMISSED' }), TASK_FORM_RESOLVED_ELSEWHERE);
+  assert.equal(taskFormMode(null, { status: 'OPEN' }), TASK_FORM_OPEN);
+});
+
+test('taskFormMode stays open when the candidate status cannot be read', () => {
+  assert.equal(taskFormMode(null, null), TASK_FORM_OPEN);
+  assert.equal(taskFormMode(null, undefined), TASK_FORM_OPEN);
+});
+
+test('taskFormMode shows the recorded decision before any current status', () => {
+  assert.equal(taskFormMode(recordedSame, { status: 'CONFIRMED' }), TASK_FORM_RECORDED);
+  assert.equal(taskFormMode(recordedSame, { status: 'OPEN' }), TASK_FORM_RECORDED);
+  assert.equal(taskFormMode(recordedSame, null), TASK_FORM_RECORDED);
+});
+
+test('taskAdditionalData sends no decision for a candidate resolved elsewhere', () => {
+  assert.equal(taskAdditionalData(taskFormMode(null, { status: 'CONFIRMED' }), filledForm, businessData), null);
+  assert.equal(taskAdditionalData(taskFormMode(null, { status: 'DISMISSED' }), filledForm, businessData), null);
+});
+
+test('taskAdditionalData sends the encoded decision while the candidate is open', () => {
+  const expected = encodeAdditionalData({ decision: 'same', keep: A, note: 'ok' });
+  assert.equal(taskAdditionalData(taskFormMode(null, { status: 'OPEN' }), filledForm, businessData), expected);
+  assert.equal(taskAdditionalData(taskFormMode(null, null), filledForm, businessData), expected);
+});
+
+test('taskAdditionalData sends no decision for an incomplete or invalid form', () => {
+  assert.equal(taskAdditionalData(TASK_FORM_OPEN, { decision: null, keep: null, note: '' }, businessData), null);
+  assert.equal(taskAdditionalData(TASK_FORM_OPEN, { decision: 'same', keep: C, note: '' }, businessData), null);
+});
+
+test('taskAdditionalData leaves a recorded task or unreadable business data untouched', () => {
+  assert.equal(
+    taskAdditionalData(taskFormMode(recordedSame, { status: 'CONFIRMED' }), filledForm, businessData),
+    undefined,
+  );
+  assert.equal(taskAdditionalData(TASK_FORM_OPEN, filledForm, null), undefined);
+  assert.equal(taskAdditionalData(TASK_FORM_RESOLVED_ELSEWHERE, filledForm, 'x'), undefined);
 });
