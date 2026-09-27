@@ -48,6 +48,9 @@ test('no message is empty', () => {
   }));
 });
 
-test('French messages never use the word enrolment', () => {
-  Object.entries(fr).forEach(([key, value]) => assert.doesNotMatch(value, /enr[ôo]l/i, key));
+test('French messages keep « enrôlement » and « enregistrement » out of these screens', () => {
+  Object.entries(fr).forEach(([key, value]) => {
+    assert.doesNotMatch(value, /enr[ôo]l/i, key);
+    assert.doesNotMatch(value, /enregistr/i, key);
+  });
 });
