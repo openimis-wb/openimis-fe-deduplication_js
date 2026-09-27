@@ -17,7 +17,9 @@ import { CANDIDATE_STATUS_QUERY } from '../../queries';
 import {
   DECISION_DIFFERENT, DECISION_SAME, STATUS_OPEN, evidenceRows,
 } from '../../util/candidates';
-import { isPlainObject, isUuid, labelOr, parseJson } from '../../util/gql';
+import {
+  isPlainObject, isUuid, labelOr, parseJson,
+} from '../../util/gql';
 import {
   buildTaskResolution,
   decodeCompletedResolution,
