@@ -5,6 +5,7 @@ import NotificationsActiveIcon from '@material-ui/icons/NotificationsActive';
 import ReceiptIcon from '@material-ui/icons/Receipt';
 import GavelIcon from '@material-ui/icons/Gavel';
 import DeleteSweepIcon from '@material-ui/icons/DeleteSweep';
+import FingerprintIcon from '@material-ui/icons/Fingerprint';
 import messagesEn from './translations/en.json';
 import messagesFr from './translations/fr.json';
 import DeduplicationFieldSelectionDialog from './components/dialogs/DeduplicationFieldSelectionDialog';
@@ -25,6 +26,7 @@ import BiometricAlertsPage from './pages/BiometricAlertsPage';
 import BiometricAuditPage from './pages/BiometricAuditPage';
 import BiometricCriteriaPage from './pages/BiometricCriteriaPage';
 import BiometricRetentionPage from './pages/BiometricRetentionPage';
+import BiometricVerificationsPage from './pages/BiometricVerificationsPage';
 import DuplicateCandidateSearcher from './components/candidates/DuplicateCandidateSearcher';
 import SubjectCard from './components/candidates/SubjectCard';
 import IndividualSubjectCard from './components/candidates/IndividualSubjectCard';
@@ -43,12 +45,14 @@ import {
   REF_ROUTE_BIOMETRIC_AUDIT,
   REF_ROUTE_BIOMETRIC_CRITERIA,
   REF_ROUTE_BIOMETRIC_RETENTION,
+  REF_ROUTE_BIOMETRIC_VERIFICATIONS,
   REF_ROUTE_CANDIDATE,
   REF_ROUTE_CANDIDATES,
   ROUTE_BIOMETRIC_ALERTS,
   ROUTE_BIOMETRIC_AUDIT,
   ROUTE_BIOMETRIC_CRITERIA,
   ROUTE_BIOMETRIC_RETENTION,
+  ROUTE_BIOMETRIC_VERIFICATIONS,
   ROUTE_CANDIDATE,
   ROUTE_CANDIDATES,
   SUBJECT_CARD_CONTRIBUTION_KEY,
@@ -62,6 +66,7 @@ const PAGE_COMPONENTS = {
   [ADMIN_PAGE.BIOMETRIC_AUDIT]: BiometricAuditPage,
   [ADMIN_PAGE.BIOMETRIC_CRITERIA]: BiometricCriteriaPage,
   [ADMIN_PAGE.BIOMETRIC_RETENTION]: BiometricRetentionPage,
+  [ADMIN_PAGE.BIOMETRIC_VERIFICATIONS]: BiometricVerificationsPage,
 };
 
 const MENU_ICONS = {
@@ -70,6 +75,7 @@ const MENU_ICONS = {
   Receipt: ReceiptIcon,
   Gavel: GavelIcon,
   DeleteSweep: DeleteSweepIcon,
+  Fingerprint: FingerprintIcon,
 };
 
 const DEFAULT_CONFIG = {
@@ -98,6 +104,7 @@ const DEFAULT_CONFIG = {
     { key: REF_ROUTE_BIOMETRIC_AUDIT, ref: ROUTE_BIOMETRIC_AUDIT },
     { key: REF_ROUTE_BIOMETRIC_CRITERIA, ref: ROUTE_BIOMETRIC_CRITERIA },
     { key: REF_ROUTE_BIOMETRIC_RETENTION, ref: ROUTE_BIOMETRIC_RETENTION },
+    { key: REF_ROUTE_BIOMETRIC_VERIFICATIONS, ref: ROUTE_BIOMETRIC_VERIFICATIONS },
     { key: 'deduplication.DuplicateCandidateSearcher', ref: DuplicateCandidateSearcher },
     { key: 'deduplication.BiometricTemplatesPanel', ref: BiometricTemplatesPanel },
     { key: 'deduplication.SubjectCard', ref: SubjectCard },

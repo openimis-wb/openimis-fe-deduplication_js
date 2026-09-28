@@ -10,6 +10,7 @@ const BIOMETRIC_PAGES = [
   ADMIN_PAGE.BIOMETRIC_AUDIT,
   ADMIN_PAGE.BIOMETRIC_CRITERIA,
   ADMIN_PAGE.BIOMETRIC_RETENTION,
+  ADMIN_PAGE.BIOMETRIC_VERIFICATIONS,
 ];
 
 test('every route requires a non-empty list of numeric rights', () => {
@@ -22,7 +23,7 @@ test('every route requires a non-empty list of numeric rights', () => {
   });
 });
 
-test('default configuration: the six pages with their rights and paths', () => {
+test('default configuration: the seven pages with their rights and paths', () => {
   const specs = adminRouteSpecs(undefined);
   assert.equal(specs.biometricEnabled, true);
   const pages = byPage(specs);
@@ -39,6 +40,8 @@ test('default configuration: the six pages with their rights and paths', () => {
   assert.equal(pages.biometricCriteria.path, 'deduplication/biometric/criteria');
   assert.deepEqual(pages.biometricRetention.requiredRights, [174007, 174005]);
   assert.equal(pages.biometricRetention.path, 'deduplication/biometric/retention');
+  assert.deepEqual(pages.biometricVerifications.requiredRights, [174004]);
+  assert.equal(pages.biometricVerifications.path, 'deduplication/biometric/verifications');
 });
 
 test('biometricAdmin.enabled false keeps the duplicate pages only', () => {
@@ -79,6 +82,7 @@ test('menu entries: one per listed page, stable ids, message ids and v4 icon nam
     { id: 'deduplication.biometricAudit', text: 'menu.biometricAudit', icon: 'Receipt' },
     { id: 'deduplication.biometricCriteria', text: 'menu.biometricCriteria', icon: 'Gavel' },
     { id: 'deduplication.biometricRetention', text: 'menu.biometricRetention', icon: 'DeleteSweep' },
+    { id: 'deduplication.biometricVerifications', text: 'menu.biometricVerifications', icon: 'Fingerprint' },
   ]);
   assert.equal(byPage(adminRouteSpecs(undefined)).candidate.menu, null);
 });

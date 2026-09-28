@@ -1,7 +1,7 @@
 // Pure helpers for the verification records and multimodal decision screens.
 /* eslint-disable import/extensions -- node --test resolves ESM imports only with the extension */
 import {
-  dateTimeArg, hasAnyRight, isPlainObject, isUuid, stringArg,
+  dateTimeArg, hasAnyRight, isPlainObject, isUuid, labelOr, stringArg,
 } from './gql.js';
 
 // Modalities the backend registers a provider for (biometric/registry.py).
@@ -149,4 +149,11 @@ export function verificationScreenAccess(rights, { readRights, identifyRights, c
     canIdentify: canRead && hasAnyRight(rights, identifyRights),
     canFilterProfiles: canRead && hasAnyRight(rights, configRights),
   };
+}
+
+// The translation of `<keyPrefix>.<code>` when the catalogue holds it, the raw
+// code otherwise, and a dash for an empty code.
+export function codeLabel(messages, keyPrefix, code) {
+  if (code === null || code === undefined || code === '') return '—';
+  return labelOr(messages, `${keyPrefix}.${code}`, String(code));
 }

@@ -5,11 +5,13 @@ import {
   CONFIG_KEYS,
   RIGHT_BIOMETRIC_AUDIT_READ,
   RIGHT_BIOMETRIC_CONFIG_READ,
+  RIGHT_BIOMETRIC_READ,
   RIGHT_DUPLICATE_SEARCH,
   ROUTE_BIOMETRIC_ALERTS,
   ROUTE_BIOMETRIC_AUDIT,
   ROUTE_BIOMETRIC_CRITERIA,
   ROUTE_BIOMETRIC_RETENTION,
+  ROUTE_BIOMETRIC_VERIFICATIONS,
   ROUTE_CANDIDATE,
   ROUTE_CANDIDATES,
 } from '../constants.js';
@@ -21,6 +23,7 @@ export const ADMIN_PAGE = {
   BIOMETRIC_AUDIT: 'biometricAudit',
   BIOMETRIC_CRITERIA: 'biometricCriteria',
   BIOMETRIC_RETENTION: 'biometricRetention',
+  BIOMETRIC_VERIFICATIONS: 'biometricVerifications',
 };
 
 // fe-core's route guard and menu filters compare rights with strict equality
@@ -78,6 +81,12 @@ export function adminRouteSpecs(cfg) {
         path: ROUTE_BIOMETRIC_RETENTION,
         requiredRights: [...new Set([...configRights, ...auditRights])],
         menu: menuEntry(ADMIN_PAGE.BIOMETRIC_RETENTION, 'DeleteSweep'),
+      },
+      {
+        page: ADMIN_PAGE.BIOMETRIC_VERIFICATIONS,
+        path: ROUTE_BIOMETRIC_VERIFICATIONS,
+        requiredRights: [RIGHT_BIOMETRIC_READ],
+        menu: menuEntry(ADMIN_PAGE.BIOMETRIC_VERIFICATIONS, 'Fingerprint'),
       },
     );
   }

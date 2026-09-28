@@ -9,6 +9,7 @@ export const RIGHT_DUPLICATE_REVIEW_TASKS = 172001;
 export const RIGHT_DUPLICATE_RESOLVE = 172003;
 export const RIGHT_DUPLICATE_SCAN = 172004;
 export const RIGHT_DUPLICATE_SEARCH = 172005;
+export const RIGHT_BIOMETRIC_IDENTIFY = 174003;
 export const RIGHT_BIOMETRIC_READ = 174004;
 export const RIGHT_BIOMETRIC_AUDIT_READ = 174005;
 export const RIGHT_BIOMETRIC_ALERT_TRIAGE = 174006;
@@ -21,6 +22,7 @@ export const ROUTE_BIOMETRIC_ALERTS = 'deduplication/biometric/alerts';
 export const ROUTE_BIOMETRIC_AUDIT = 'deduplication/biometric/audit';
 export const ROUTE_BIOMETRIC_CRITERIA = 'deduplication/biometric/criteria';
 export const ROUTE_BIOMETRIC_RETENTION = 'deduplication/biometric/retention';
+export const ROUTE_BIOMETRIC_VERIFICATIONS = 'deduplication/biometric/verifications';
 
 export const REF_ROUTE_CANDIDATES = 'deduplication.route.candidates';
 export const REF_ROUTE_CANDIDATE = 'deduplication.route.candidate';
@@ -28,6 +30,7 @@ export const REF_ROUTE_BIOMETRIC_ALERTS = 'deduplication.route.biometricAlerts';
 export const REF_ROUTE_BIOMETRIC_AUDIT = 'deduplication.route.biometricAudit';
 export const REF_ROUTE_BIOMETRIC_CRITERIA = 'deduplication.route.biometricCriteria';
 export const REF_ROUTE_BIOMETRIC_RETENTION = 'deduplication.route.biometricRetention';
+export const REF_ROUTE_BIOMETRIC_VERIFICATIONS = 'deduplication.route.biometricVerifications';
 
 export const MODULE_KEY = 'deduplication';
 export const CONFIG_MODULE = 'fe-deduplication';
