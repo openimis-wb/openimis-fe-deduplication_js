@@ -10,8 +10,8 @@ import { chainHeadView } from '../../util/biometric';
 import { StyledCard } from '../candidates/SubjectCard';
 
 // The newest event of the biometric audit chain: its sequence, its hash and
-// the event count. It states nothing about integrity; that is checked on the
-// server with the biometric_audit_verify command.
+// the event count. It states nothing about integrity; ChainStatusPanel shows
+// the server's verification.
 function ChainHeadPanel() {
   const modulesManager = useModulesManager();
   const { formatMessage, formatMessageWithValues, formatDateTimeFromISO } = useTranslations(

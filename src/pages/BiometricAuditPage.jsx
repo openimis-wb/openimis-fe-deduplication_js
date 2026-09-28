@@ -3,10 +3,12 @@ import { Box } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { Helmet, useModulesManager, useTranslations } from '@openimis/fe-core';
 import { MODULE_KEY } from '../constants';
-import { auditReadRights } from '../config';
+import { auditReadRights, auditVerifyRights } from '../config';
 import { hasAnyRight } from '../util/gql';
+import { canVerifyChain } from '../util/biometric';
 import { useUserRights } from '../components/common/adminHooks';
 import ChainHeadPanel from '../components/biometric/ChainHeadPanel';
+import ChainStatusPanel from '../components/biometric/ChainStatusPanel';
 import BiometricAuditEventSearcher from '../components/biometric/BiometricAuditEventSearcher';
 
 const StyledPage = styled('div')(({ theme }) => ({
@@ -17,10 +19,14 @@ function BiometricAuditPage() {
   const modulesManager = useModulesManager();
   const rights = useUserRights();
   const { formatMessage } = useTranslations(MODULE_KEY, modulesManager);
-  if (!hasAnyRight(rights, auditReadRights(modulesManager))) return null;
+  const auditRights = auditReadRights(modulesManager);
+  if (!hasAnyRight(rights, auditRights)) return null;
   return (
     <StyledPage>
       <Helmet title={formatMessage('biometric.audit.helmet')} />
+      <Box mb={2}>
+        <ChainStatusPanel canVerify={canVerifyChain(rights, auditVerifyRights(modulesManager), auditRights)} />
+      </Box>
       <Box mb={2}>
         <ChainHeadPanel />
       </Box>

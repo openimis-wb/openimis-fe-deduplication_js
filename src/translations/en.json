@@ -206,5 +206,19 @@
     "deduplication.biometric.chain.empty": "No event recorded.",
     "deduplication.biometric.chain.unavailable": "The head of the chain could not be read.",
     "deduplication.biometric.chain.notReadable": "The audit log is not readable with your rights.",
-    "deduplication.biometric.chain.disclaimer": "This page shows the last hash; it does not check the chain. Integrity is checked on the server with the command manage.py biometric_audit_verify. The chain is tamper evidence, not a certified timestamp: record the last sequence number and hash outside the system, for example in a signed report."
+    "deduplication.biometric.chain.disclaimer": "This panel shows the last hash; it does not check the chain, the verification panel above does. The chain is tamper evidence, not a certified timestamp: record the last sequence number and hash outside the system, for example in a signed report.",
+    "deduplication.biometric.chainStatus.title": "Audit chain verification",
+    "deduplication.biometric.chainStatus.verify": "Verify now",
+    "deduplication.biometric.chainStatus.never": "No verification of the chain is recorded yet.",
+    "deduplication.biometric.chainStatus.unavailable": "The last verification could not be read.",
+    "deduplication.biometric.chainStatus.ok": "Last verification: chain intact, {checked} events verified up to no. {head}.",
+    "deduplication.biometric.chainStatus.broken": "Last verification: chain broken at event no. {sequence} ({kind}); {checked} events verified before it.",
+    "deduplication.biometric.chainStatus.brokenNoSequence": "Last verification: chain broken ({kind}); {checked} events verified.",
+    "deduplication.biometric.chainStatus.checkedAtBy": "Verified on {at} by {by}.",
+    "deduplication.biometric.chainStatus.head": "Head of the chain when verified: event no. {sequence}.",
+    "deduplication.biometric.chainStatus.verifyFailed": "The verification was refused: {error}",
+    "deduplication.biometric.chainStatus.explanation": "The verification recomputes every hash of the chain on the server and records its outcome. It detects a change to a stored event; it does not replace a copy of the last hash kept outside the system.",
+    "deduplication.biometric.chainStatus.divergence.missing_event": "missing event",
+    "deduplication.biometric.chainStatus.divergence.broken_link": "broken link to the previous event",
+    "deduplication.biometric.chainStatus.divergence.altered_row": "altered event"
 }

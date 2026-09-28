@@ -188,5 +188,19 @@
     "deduplication.biometric.chain.empty": "Aucun événement consigné.",
     "deduplication.biometric.chain.unavailable": "La tête de la chaîne n'a pas pu être lue.",
     "deduplication.biometric.chain.notReadable": "Le journal d'audit n'est pas consultable avec vos droits.",
-    "deduplication.biometric.chain.disclaimer": "Cette page affiche la dernière empreinte ; elle ne vérifie pas la chaîne. L'intégrité se vérifie sur le serveur avec la commande manage.py biometric_audit_verify. La chaîne est une preuve d'altération, pas un horodatage certifié : consignez le dernier numéro et l'empreinte hors du système, par exemple dans un procès-verbal signé."
+    "deduplication.biometric.chain.disclaimer": "Ce panneau affiche la dernière empreinte ; il ne vérifie pas la chaîne, c'est le rôle du panneau de vérification ci-dessus. La chaîne est une preuve d'altération, pas un horodatage certifié : consignez le dernier numéro et l'empreinte hors du système, par exemple dans un procès-verbal signé.",
+    "deduplication.biometric.chainStatus.title": "Vérification de la chaîne d'audit",
+    "deduplication.biometric.chainStatus.verify": "Vérifier maintenant",
+    "deduplication.biometric.chainStatus.never": "Aucune vérification de la chaîne n'est encore consignée.",
+    "deduplication.biometric.chainStatus.unavailable": "La dernière vérification n'a pas pu être lue.",
+    "deduplication.biometric.chainStatus.ok": "Dernière vérification : chaîne intègre, {checked} événements vérifiés jusqu'au n° {head}.",
+    "deduplication.biometric.chainStatus.broken": "Dernière vérification : chaîne rompue à l'événement n° {sequence} ({kind}) ; {checked} événements vérifiés avant la rupture.",
+    "deduplication.biometric.chainStatus.brokenNoSequence": "Dernière vérification : chaîne rompue ({kind}) ; {checked} événements vérifiés.",
+    "deduplication.biometric.chainStatus.checkedAtBy": "Vérifiée le {at} par {by}.",
+    "deduplication.biometric.chainStatus.head": "Tête de la chaîne lors de la vérification : événement n° {sequence}.",
+    "deduplication.biometric.chainStatus.verifyFailed": "La vérification a été refusée : {error}",
+    "deduplication.biometric.chainStatus.explanation": "La vérification recalcule sur le serveur toutes les empreintes de la chaîne et en consigne le résultat. Elle détecte la modification d'un événement consigné ; elle ne remplace pas une copie de la dernière empreinte conservée hors du système.",
+    "deduplication.biometric.chainStatus.divergence.missing_event": "événement manquant",
+    "deduplication.biometric.chainStatus.divergence.broken_link": "lien rompu avec l'événement précédent",
+    "deduplication.biometric.chainStatus.divergence.altered_row": "événement altéré"
 }
