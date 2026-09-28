@@ -16,7 +16,8 @@ Please refer to [openimis-fe_js](https://github.com/openimis/openimis-fe_js) to 
 | Biometric alerts | `deduplication/biometric/alerts` | 174005; 174006 acknowledges and resolves | `biometricAlerts` (impersonation evidence from `detail`), `acknowledgeBiometricAlert`, `resolveBiometricAlert` |
 | Biometric audit log | `deduplication/biometric/audit` | 174005; 174008 with 174005 runs the chain verification | `biometricAuditEvents`, `biometricAuditChainStatus`, `verifyBiometricAuditChain` |
 | Biometric decision criteria | `deduplication/biometric/criteria` | 174007 | `biometricDecisionCriteria` |
-| Biometric retention and erasures | `deduplication/biometric/retention` | 174007 shows the policy; 174005 lists the erasures | `biometricRetentionPolicy`, `biometricErasures` |
+| Biometric retention and erasures | `deduplication/biometric/retention` | 174007 shows the policy; 174005 lists the erasures | `biometricRetentionPolicy`, `biometricErasures`, `biometricErasureFilterValues` (record type and author selects) |
+| Biometric verifications | `deduplication/biometric/verifications` | 174004; 174003 shows the matched and ranked records of the impersonation check; 174007 adds the risk profile filter on decisions | `biometricVerificationRecords`, `biometricMultimodalDecisions`, `node` (a decision leg's verification), `biometricDecisionCriteria` (profile names) |
 | Individual "Biometrics" tab | fe-individual `individual.TabPanel.*` | 174004 | `biometricTemplates` with `qualityVerdict` and its `measures` |
 
 Tasks with source `deduplication_candidate` get a review form in the task screen. The decision is stored as the task's
