@@ -243,3 +243,19 @@ export function erasedCounts(erasure) {
     .map(([modality, count]) => ({ modality, count }))
     .sort((a, b) => a.modality.localeCompare(b.modality));
 }
+
+const textValues = (value) => (Array.isArray(value) ? value.filter((v) => typeof v === 'string' && v !== '') : []);
+
+// The value lists of biometricErasureFilterValues; empty lists when unread.
+export function erasureFilterValues(data) {
+  const values = data?.biometricErasureFilterValues;
+  return { erasedBy: textValues(values?.erasedBy), subjectModel: textValues(values?.subjectModel) };
+}
+
+// The server caps each value list, so a chosen value may be missing from it;
+// it stays selectable so the select never drops an applied filter.
+export function filterSelectValues(values, current) {
+  const list = textValues(values);
+  if (typeof current !== 'string' || current === '' || list.includes(current)) return list;
+  return [...list, current];
+}

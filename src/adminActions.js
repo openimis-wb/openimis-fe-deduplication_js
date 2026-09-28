@@ -14,8 +14,10 @@ import {
   AUDIT_EVENT_PROJECTION,
   CANDIDATE_PROJECTION,
   ERASURE_PROJECTION,
+  MULTIMODAL_DECISION_PROJECTION,
   MUTATION_LOG_QUERY,
   RESOLVE_ALERT_MUTATION,
+  VERIFICATION_RECORD_PROJECTION,
   VERIFY_AUDIT_CHAIN_MUTATION,
 } from './queries';
 
@@ -60,6 +62,24 @@ export function fetchBiometricAuditEvents(params) {
 export function fetchBiometricErasures(params) {
   const payload = formatPageQueryWithCount('biometricErasures', withStableOrder(params), ERASURE_PROJECTION);
   return graphql(payload, ADMIN_ACTION_TYPE.SEARCH_BIOMETRIC_ERASURES);
+}
+
+export function fetchBiometricVerificationRecords(params) {
+  const payload = formatPageQueryWithCount(
+    'biometricVerificationRecords',
+    withStableOrder(params),
+    VERIFICATION_RECORD_PROJECTION,
+  );
+  return graphql(payload, ADMIN_ACTION_TYPE.SEARCH_BIOMETRIC_VERIFICATIONS);
+}
+
+export function fetchBiometricMultimodalDecisions(params) {
+  const payload = formatPageQueryWithCount(
+    'biometricMultimodalDecisions',
+    withStableOrder(params),
+    MULTIMODAL_DECISION_PROJECTION,
+  );
+  return graphql(payload, ADMIN_ACTION_TYPE.SEARCH_BIOMETRIC_MULTIMODAL_DECISIONS);
 }
 
 function performMutation(operation, input, successType, clientMutationLabel) {

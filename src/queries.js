@@ -63,6 +63,61 @@ export const ERASURE_PROJECTION = [
   'erasedAt',
 ];
 
+const IMPERSONATION_PROBE_FIELDS = `impersonation {
+    status suspected threshold margin topK claimedScore matchedSubjectModel matchedSubjectId matchedScore
+    candidates { subjectModel subjectId score suspect }
+    error latencyMs
+  }`;
+
+export const VERIFICATION_RECORD_PROJECTION = [
+  'id',
+  'subjectModel',
+  'subjectId',
+  'modality',
+  'score',
+  'threshold',
+  'verified',
+  'origin',
+  'fallback',
+  'deviceId',
+  'actor',
+  'createdAt',
+  'riskProfile',
+  'impersonationSkipReason',
+  'templateSkipReason',
+  IMPERSONATION_PROBE_FIELDS,
+];
+
+export const MULTIMODAL_DECISION_PROJECTION = [
+  'id',
+  'subjectModel',
+  'subjectId',
+  'outcome',
+  'score',
+  'reasons',
+  'riskProfile',
+  'modalities',
+  'verificationIds',
+  'fallback',
+  'deviceId',
+  'actor',
+  'createdAt',
+];
+
+export const VERIFICATION_RECORD_QUERY = `query BiometricVerificationRecord($id: ID!) {
+  node(id: $id) {
+    ... on BiometricVerificationGQLType { ${VERIFICATION_RECORD_PROJECTION.join(' ')} }
+  }
+}`;
+
+export const ERASURE_FILTER_VALUES_QUERY = `query BiometricErasureFilterValues {
+  biometricErasureFilterValues { erasedBy subjectModel }
+}`;
+
+export const RISK_PROFILE_NAMES_QUERY = `query BiometricRiskProfileNames {
+  biometricDecisionCriteria { profiles { name } }
+}`;
+
 const ALERT_FIELDS = ALERT_PROJECTION.join(' ');
 
 export const ACKNOWLEDGE_ALERT_MUTATION = `mutation AcknowledgeBiometricAlert($id: String!) {
