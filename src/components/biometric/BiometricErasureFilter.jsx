@@ -11,7 +11,9 @@ import {
 } from '@openimis/fe-core';
 import { useIntl } from 'react-intl';
 import { DEFAULT_DEBOUNCE_TIME, ERASURE_REASONS, MODULE_KEY } from '../../constants';
-import { erasureFilterFragment } from '../../util/biometric';
+import { useGqlQuery } from '../../hooks';
+import { ERASURE_FILTER_VALUES_QUERY } from '../../queries';
+import { erasureFilterFragment, erasureFilterValues, filterSelectValues } from '../../util/biometric';
 import { labelOr } from '../../util/gql';
 import FilterSelect from '../common/FilterSelect';
 
@@ -30,10 +32,14 @@ export const erasureReasonLabel = (messages, reason) => labelOr(
   reason,
 );
 
+// Record type and author are selects over the values the erasures hold; when
+// the values cannot be read the selects offer "all" only.
 function BiometricErasureFilter({ filters, onChangeFilters }) {
   const intl = useIntl();
   const modulesManager = useModulesManager();
   const { formatMessage } = useTranslations(MODULE_KEY, modulesManager);
+  const { data } = useGqlQuery(ERASURE_FILTER_VALUES_QUERY, {});
+  const values = erasureFilterValues(data);
   const filterValue = (id) => filters?.[id]?.value ?? null;
 
   const change = (id) => (value) => onChangeFilters([{
@@ -41,9 +47,7 @@ function BiometricErasureFilter({ filters, onChangeFilters }) {
     value: value === '' || value === undefined ? null : value,
     filter: erasureFilterFragment(id, value),
   }]);
-  const debouncedSubjectModel = useDebounceCb(change('subjectModel'), DEFAULT_DEBOUNCE_TIME);
   const debouncedSubjectId = useDebounceCb(change('subjectId'), DEFAULT_DEBOUNCE_TIME);
-  const debouncedErasedBy = useDebounceCb(change('erasedBy'), DEFAULT_DEBOUNCE_TIME);
 
   return (
     <Grid container component={StyledForm}>
@@ -59,11 +63,14 @@ function BiometricErasureFilter({ filters, onChangeFilters }) {
         />
       </Grid>
       <Grid size={GRID_RESPONSIVE_STANDARD} component={StyledItem}>
-        <TextInput
-          module={MODULE_KEY}
-          label="biometric.erasure.subjectModel"
-          value={filterValue('subjectModel') ?? ''}
-          onChange={debouncedSubjectModel}
+        <FilterSelect
+          name="subjectModel"
+          label={formatMessage('biometric.erasure.subjectModel')}
+          anyLabel={formatMessage('filter.any')}
+          values={filterSelectValues(values.subjectModel, filterValue('subjectModel'))}
+          optionLabel={(v) => v}
+          value={filterValue('subjectModel')}
+          onChange={change('subjectModel')}
         />
       </Grid>
       <Grid size={GRID_RESPONSIVE_STANDARD} component={StyledItem}>
@@ -75,11 +82,14 @@ function BiometricErasureFilter({ filters, onChangeFilters }) {
         />
       </Grid>
       <Grid size={GRID_RESPONSIVE_STANDARD} component={StyledItem}>
-        <TextInput
-          module={MODULE_KEY}
-          label="biometric.erasure.erasedBy"
-          value={filterValue('erasedBy') ?? ''}
-          onChange={debouncedErasedBy}
+        <FilterSelect
+          name="erasedBy"
+          label={formatMessage('biometric.erasure.erasedBy')}
+          anyLabel={formatMessage('filter.any')}
+          values={filterSelectValues(values.erasedBy, filterValue('erasedBy'))}
+          optionLabel={(v) => v}
+          value={filterValue('erasedBy')}
+          onChange={change('erasedBy')}
         />
       </Grid>
       <Grid size={GRID_RESPONSIVE_STANDARD} component={StyledItem}>
