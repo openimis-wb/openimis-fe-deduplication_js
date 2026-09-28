@@ -1,22 +1,26 @@
 import * as React from 'react';
 import { useDispatch } from 'react-redux';
 import {
-  Alert, Box, Button, Chip,
+  Alert, Box, Button, Chip, IconButton, Tooltip,
 } from '@mui/material';
-import { Searcher, useModulesManager, useTranslations } from '@openimis/fe-core';
+import {
+  GetIconComponent, Searcher, useModulesManager, useTranslations,
+} from '@openimis/fe-core';
 import { useIntl } from 'react-intl';
 import {
   acknowledgeBiometricAlert, fetchBiometricAlerts, resolveBiometricAlert,
 } from '../../adminActions';
 import { MODULE_KEY } from '../../constants';
 import { alertTriageRights, rowsPerPageOptions } from '../../config';
-import { alertTransitions } from '../../util/biometric';
+import { IMPERSONATION_RULE, alertTransitions } from '../../util/biometric';
 import { hasAnyRight, labelOr, toUuid } from '../../util/gql';
 import { useAdminSlice } from '../common/adminHooks';
 import BiometricAlertFilter from './BiometricAlertFilter';
 import ResolveAlertDialog from './ResolveAlertDialog';
+import ImpersonationEvidenceDialog from './ImpersonationEvidenceDialog';
 
 const SEVERITY_COLOR = { HIGH: 'error', MEDIUM: 'warning', LOW: 'default' };
+const EvidenceIcon = GetIconComponent('ReceiptLong');
 
 // Alerts raised by the audit rules. The acknowledge and resolve mutations are
 // synchronous: each answers with the updated alert or an error, then the list reloads.
@@ -31,6 +35,7 @@ function BiometricAlertSearcher({ rights }) {
   const slice = useAdminSlice('biometricAlerts');
   const [refreshKey, setRefreshKey] = React.useState(0);
   const [resolving, setResolving] = React.useState(null);
+  const [inspecting, setInspecting] = React.useState(null);
   const [busyId, setBusyId] = React.useState(null);
   const [actionError, setActionError] = React.useState(null);
   const [hasFilters, setHasFilters] = React.useState(false);
@@ -62,6 +67,7 @@ function BiometricAlertSearcher({ rights }) {
     'biometric.alert.occurrences',
     'biometric.alert.lastSeenAt',
     'biometric.alert.state',
+    '',
     ...(canTriage ? [''] : []),
   ];
 
@@ -73,6 +79,7 @@ function BiometricAlertSearcher({ rights }) {
     ['occurrences', false],
     ['lastSeenAt', false],
     ['state', true],
+    null,
     ...(canTriage ? [null] : []),
   ];
 
@@ -90,6 +97,13 @@ function BiometricAlertSearcher({ rights }) {
     (a) => a.occurrences,
     (a) => formatDateTimeFromISO(a.lastSeenAt),
     (a) => formatMessage(`biometric.alert.state.${a.state}`),
+    (a) => (a.ruleKind === IMPERSONATION_RULE ? (
+      <Tooltip title={formatMessage('biometric.impersonation.show')}>
+        <IconButton size="small" onClick={() => setInspecting(a)}>
+          <EvidenceIcon />
+        </IconButton>
+      </Tooltip>
+    ) : null),
     ...(canTriage ? [(a) => {
       const { canAcknowledge, canResolve } = alertTransitions(a);
       return (
@@ -143,6 +157,7 @@ function BiometricAlertSearcher({ rights }) {
         rowIdentifier={(a) => a.id}
       />
       <ResolveAlertDialog alert={resolving} onClose={() => setResolving(null)} onSubmit={resolve} />
+      <ImpersonationEvidenceDialog alert={inspecting} onClose={() => setInspecting(null)} />
     </>
   );
 }
