@@ -13,7 +13,8 @@ Please refer to [openimis-fe_js](https://github.com/openimis/openimis-fe_js) to 
 | Biometric alerts | `deduplication/biometric/alerts` | 174005; 174006 acknowledges and resolves | `biometricAlerts` (impersonation evidence from `detail`), `acknowledgeBiometricAlert`, `resolveBiometricAlert` |
 | Biometric audit log | `deduplication/biometric/audit` | 174005; 174008 with 174005 runs the chain verification | `biometricAuditEvents`, `biometricAuditChainStatus`, `verifyBiometricAuditChain` |
 | Biometric decision criteria | `deduplication/biometric/criteria` | 174007 | `biometricDecisionCriteria` |
-| Biometric retention and erasures | `deduplication/biometric/retention` | 174007 shows the policy; 174005 lists the erasures | `biometricRetentionPolicy`, `biometricErasures` |
+| Biometric retention and erasures | `deduplication/biometric/retention` | 174007 shows the policy; 174005 lists the erasures | `biometricRetentionPolicy`, `biometricErasures`, `biometricErasureFilterValues` (record type and author selects) |
+| Biometric verifications | `deduplication/biometric/verifications` | 174004; 174003 shows the matched and ranked records of the impersonation check; 174007 adds the risk profile filter on decisions | `biometricVerificationRecords`, `biometricMultimodalDecisions`, `node` (a decision leg's verification), `biometricDecisionCriteria` (profile names) |
 | Individual "Biometrics" tab | fe-individual `individual.TabPanel.*` | 174004 | `biometricTemplates` with `qualityVerdict` and its `measures` |
 
 Each route declares its rights as `requiredRights`; fe-core's route guard refuses the page to other users.
@@ -33,6 +34,7 @@ The screens are listed under the `deduplication.MainMenu` main menu, with these 
 | `deduplication.biometricAudit` | `Receipt` |
 | `deduplication.biometricCriteria` | `Gavel` |
 | `deduplication.biometricRetention` | `DeleteSweep` |
+| `deduplication.biometricVerifications` | `Fingerprint` |
 
 A deployment that stores its menus in the `fe-core.menus` configuration shows the menu and its entries only once they
 are added there; icon names in that configuration are `@material-ui/icons` v4 names.
