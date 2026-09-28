@@ -4,6 +4,55 @@ It is dedicated to be bootstrap development of [openimis-fe_js](https://github.c
 
 Please refer to [openimis-fe_js](https://github.com/openimis/openimis-fe_js) to see how to build and and deploy (in developement or server mode).
 
+## Duplicate review and biometric administration
+
+| Screen | Route | Rights | Backend fields |
+|---|---|---|---|
+| Duplicate candidates | `deduplication/candidates` | 172005; 172004 runs a scan; 172001 creates review tasks | `duplicateCandidates`, `runDuplicateScan`, `createDuplicateReviewTasks` |
+| Duplicate candidate | `deduplication/candidates/candidate/<uuid>` | 172005; 172003 resolves | `duplicateCandidates(id:)`, `resolveDuplicateCandidate`, `individual(id:)` |
+| Biometric alerts | `deduplication/biometric/alerts` | 174005; 174006 acknowledges and resolves | `biometricAlerts` (impersonation evidence from `detail`), `acknowledgeBiometricAlert`, `resolveBiometricAlert` |
+| Biometric audit log | `deduplication/biometric/audit` | 174005; 174008 with 174005 runs the chain verification | `biometricAuditEvents`, `biometricAuditChainStatus`, `verifyBiometricAuditChain` |
+| Biometric decision criteria | `deduplication/biometric/criteria` | 174007 | `biometricDecisionCriteria` |
+| Biometric retention and erasures | `deduplication/biometric/retention` | 174007 shows the policy; 174005 lists the erasures | `biometricRetentionPolicy`, `biometricErasures` |
+| Individual "Biometrics" tab | fe-individual `individual.TabPanel.*` | 174004 | `biometricTemplates` with `qualityVerdict` and its `measures` |
+
+Each route declares its rights as `requiredRights`; fe-core's route guard refuses the page to other users.
+
+Tasks with source `deduplication_candidate` get a review form in the task screen. The decision is stored as the task's
+additional data; completing the task resolves the candidate on the server.
+
+Subject cards come from the `deduplication.SubjectCard` contribution, a list of `{ subjectModel, component }`. The
+module contributes the card for `individual.Individual`; other subject models show their model name and id.
+
+The screens are listed under the `deduplication.MainMenu` main menu, with these entries:
+
+| Entry id | Icon |
+|---|---|
+| `deduplication.candidates` | `FileCopy` |
+| `deduplication.biometricAlerts` | `NotificationsActive` |
+| `deduplication.biometricAudit` | `Receipt` |
+| `deduplication.biometricCriteria` | `Gavel` |
+| `deduplication.biometricRetention` | `DeleteSweep` |
+
+A deployment that stores its menus in the `fe-core.menus` configuration shows the menu and its entries only once they
+are added there; icon names in that configuration are `@material-ui/icons` v4 names.
+
+Configuration keys (`fe-deduplication`):
+
+| Key | Default |
+|---|---|
+| `candidateKinds` | `["demographic", "identifier", "biometric"]` |
+| `candidatesPageSize` | `10` |
+| `rowsPerPageOptions` | `[10, 20, 50, 100]` |
+| `biometricAdmin.enabled` | `true`; `false` removes the biometric screens and the individual tab |
+| `alertRuleKinds` | `["FAILED_VERIFICATIONS", "IMPERSONATION_SUSPECTED", "ACCESS_BURST"]`; an empty list hides the rule filter |
+| `rights.auditRead` | `[174005]` |
+| `rights.alertTriage` | `[174006]` |
+| `rights.configRead` | `[174007]` |
+| `rights.auditVerify` | `[174008]` |
+
+`yarn test` runs the unit tests of the pure helpers in `src/util` with the Node test runner.
+
 The module is built with [rollup](https://rollupjs.org/).
 In development mode, you can use `yarn link` and `yarn start` to continuously scan for changes and automatically update your development server.
 
