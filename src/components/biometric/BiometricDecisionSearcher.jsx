@@ -16,6 +16,12 @@ import VerificationDetailDialog, { codeLabel } from './VerificationDetailDialog'
 
 const OUTCOME_COLOR = { accept: 'success', review: 'warning', reject: 'error' };
 
+// Reason values arrive as Python float text; a finite one prints with three decimals.
+const reasonNumber = (text) => {
+  const number = typeof text === 'string' && text !== '' ? Number(text) : Number.NaN;
+  return Number.isFinite(number) ? formatNumber(number, 3) : text;
+};
+
 // Fused decisions of multimodal verifications, newest first. Each leg links
 // to its verification record.
 function BiometricDecisionSearcher({ canIdentify }) {
@@ -38,6 +44,8 @@ function BiometricDecisionSearcher({ canIdentify }) {
     return formatMessageWithValues(`biometric.decision.reason.${code}`, {
       ...values,
       ...(values.modality ? { modality: modalityLabel(values.modality) } : {}),
+      ...(values.score ? { score: reasonNumber(values.score) } : {}),
+      ...(values.floor ? { floor: reasonNumber(values.floor) } : {}),
     });
   };
 
