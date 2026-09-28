@@ -12,6 +12,7 @@
   },
   "scripts": {
     "build": "rollup -c",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test 'test/**/*.test.js'",
     "start": "rollup -c -w",
     "format": "prettier src -w",
     "prepare":"npm run build"
