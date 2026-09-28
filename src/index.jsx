@@ -17,6 +17,7 @@ import DuplicateCandidatesPage from './pages/DuplicateCandidatesPage';
 import DuplicateCandidatePage from './pages/DuplicateCandidatePage';
 import BiometricAlertsPage from './pages/BiometricAlertsPage';
 import BiometricAuditPage from './pages/BiometricAuditPage';
+import BiometricCriteriaPage from './pages/BiometricCriteriaPage';
 import DuplicateCandidateSearcher from './components/candidates/DuplicateCandidateSearcher';
 import SubjectCard from './components/candidates/SubjectCard';
 import IndividualSubjectCard from './components/candidates/IndividualSubjectCard';
@@ -33,12 +34,15 @@ import {
   MAIN_MENU_ID,
   REF_ROUTE_BIOMETRIC_ALERTS,
   REF_ROUTE_BIOMETRIC_AUDIT,
+  REF_ROUTE_BIOMETRIC_CRITERIA,
   REF_ROUTE_CANDIDATE,
   REF_ROUTE_CANDIDATES,
   RIGHT_BIOMETRIC_AUDIT_READ,
+  RIGHT_BIOMETRIC_CONFIG_READ,
   RIGHT_DUPLICATE_SEARCH,
   ROUTE_BIOMETRIC_ALERTS,
   ROUTE_BIOMETRIC_AUDIT,
+  ROUTE_BIOMETRIC_CRITERIA,
   ROUTE_CANDIDATE,
   ROUTE_CANDIDATES,
   SUBJECT_CARD_CONTRIBUTION_KEY,
@@ -70,6 +74,7 @@ const DEFAULT_CONFIG = {
     { key: REF_ROUTE_CANDIDATE, ref: ROUTE_CANDIDATE },
     { key: REF_ROUTE_BIOMETRIC_ALERTS, ref: ROUTE_BIOMETRIC_ALERTS },
     { key: REF_ROUTE_BIOMETRIC_AUDIT, ref: ROUTE_BIOMETRIC_AUDIT },
+    { key: REF_ROUTE_BIOMETRIC_CRITERIA, ref: ROUTE_BIOMETRIC_CRITERIA },
     { key: 'deduplication.DuplicateCandidateSearcher', ref: DuplicateCandidateSearcher },
     { key: 'deduplication.BiometricTemplatesPanel', ref: BiometricTemplatesPanel },
     { key: 'deduplication.SubjectCard', ref: SubjectCard },
@@ -88,6 +93,7 @@ const numericRights = (value, fallback) => {
 function adminContributions(cfg) {
   const biometricEnabled = cfg?.[CONFIG_KEYS.BIOMETRIC_ADMIN_ENABLED] !== false;
   const auditRights = numericRights(cfg?.[CONFIG_KEYS.RIGHTS_AUDIT_READ], [RIGHT_BIOMETRIC_AUDIT_READ]);
+  const configRights = numericRights(cfg?.[CONFIG_KEYS.RIGHTS_CONFIG_READ], [RIGHT_BIOMETRIC_CONFIG_READ]);
   const menu = [{ route: ROUTE_CANDIDATES }];
   const routes = [
     {
@@ -102,7 +108,7 @@ function adminContributions(cfg) {
   ];
   const contributions = {};
   if (biometricEnabled) {
-    menu.push({ route: ROUTE_BIOMETRIC_ALERTS }, { route: ROUTE_BIOMETRIC_AUDIT });
+    menu.push({ route: ROUTE_BIOMETRIC_ALERTS }, { route: ROUTE_BIOMETRIC_AUDIT }, { route: ROUTE_BIOMETRIC_CRITERIA });
     routes.push(
       {
         path: ROUTE_BIOMETRIC_ALERTS,
@@ -119,6 +125,14 @@ function adminContributions(cfg) {
         icon: 'ReceiptLong',
         rights: auditRights,
         component: BiometricAuditPage,
+      },
+      {
+        path: ROUTE_BIOMETRIC_CRITERIA,
+        text: 'deduplication.menu.biometricCriteria',
+        id: 'deduplication.biometricCriteria',
+        icon: 'Rule',
+        rights: configRights,
+        component: BiometricCriteriaPage,
       },
     );
     contributions['individual.TabPanel.label'] = [SubjectBiometricsTabLabel];
