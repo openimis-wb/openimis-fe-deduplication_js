@@ -5,6 +5,8 @@ import {
   chainStatusView,
   erasedCounts,
   erasureFilterFragment,
+  erasureFilterValues,
+  filterSelectValues,
   formatNumber,
   fusionRuleRows,
   impersonationEvidence,
@@ -231,4 +233,23 @@ test('erasedCounts lists the per-modality counts sorted by modality', () => {
   assert.deepEqual(erasedCounts({ erased: { face: 'x' } }), []);
   assert.deepEqual(erasedCounts({ erased: null }), []);
   assert.deepEqual(erasedCounts(null), []);
+});
+
+test('erasureFilterValues reads both value lists and drops anything but text', () => {
+  assert.deepEqual(erasureFilterValues({
+    biometricErasureFilterValues: { erasedBy: ['admin', 'retention'], subjectModel: ['individual.Individual'] },
+  }), { erasedBy: ['admin', 'retention'], subjectModel: ['individual.Individual'] });
+  assert.deepEqual(erasureFilterValues({
+    biometricErasureFilterValues: { erasedBy: ['admin', null, '', 3], subjectModel: null },
+  }), { erasedBy: ['admin'], subjectModel: [] });
+  assert.deepEqual(erasureFilterValues(null), { erasedBy: [], subjectModel: [] });
+});
+
+test('filterSelectValues keeps a chosen value the server list no longer holds', () => {
+  assert.deepEqual(filterSelectValues(['a', 'b'], 'b'), ['a', 'b']);
+  assert.deepEqual(filterSelectValues(['a', 'b'], 'z'), ['a', 'b', 'z']);
+  assert.deepEqual(filterSelectValues([], 'z'), ['z']);
+  assert.deepEqual(filterSelectValues(['a'], null), ['a']);
+  assert.deepEqual(filterSelectValues(['a'], ''), ['a']);
+  assert.deepEqual(filterSelectValues(null, null), []);
 });
