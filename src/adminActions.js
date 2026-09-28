@@ -13,8 +13,10 @@ import {
   ALERT_PROJECTION,
   AUDIT_EVENT_PROJECTION,
   CANDIDATE_PROJECTION,
+  ERASURE_PROJECTION,
   MUTATION_LOG_QUERY,
   RESOLVE_ALERT_MUTATION,
+  VERIFY_AUDIT_CHAIN_MUTATION,
 } from './queries';
 
 const MUTATION_LOG_PENDING = 0;
@@ -53,6 +55,11 @@ export function fetchBiometricAlerts(params) {
 export function fetchBiometricAuditEvents(params) {
   const payload = formatPageQueryWithCount('biometricAuditEvents', params, AUDIT_EVENT_PROJECTION);
   return graphql(payload, ADMIN_ACTION_TYPE.SEARCH_BIOMETRIC_AUDIT_EVENTS);
+}
+
+export function fetchBiometricErasures(params) {
+  const payload = formatPageQueryWithCount('biometricErasures', withStableOrder(params), ERASURE_PROJECTION);
+  return graphql(payload, ADMIN_ACTION_TYPE.SEARCH_BIOMETRIC_ERASURES);
 }
 
 function performMutation(operation, input, successType, clientMutationLabel) {
@@ -116,19 +123,28 @@ export function awaitMutationLog(clientMutationId) {
   };
 }
 
-function alertMutation(operation, variables, root) {
+// A mutation answering with its result: resolves to { result, error }.
+function synchronousMutation(operation, variables, root, actionType) {
   return async (dispatch) => {
-    const response = await dispatch(graphqlWithVariables(
-      operation,
-      variables,
-      'DEDUPLICATION_ADMIN_ALERT_MUTATION',
-    ));
+    const response = await dispatch(graphqlWithVariables(operation, variables, actionType));
     const errors = response?.payload?.errors || response?.payload?.response?.errors;
     if (response?.error || errors?.length) {
       const message = errors?.map((e) => e.message).join('; ') || response?.payload?.message || 'error';
-      return { alert: null, error: message };
+      return { result: null, error: message };
     }
-    return { alert: response?.payload?.data?.[root] ?? null, error: null };
+    return { result: response?.payload?.data?.[root] ?? null, error: null };
+  };
+}
+
+function alertMutation(operation, variables, root) {
+  return async (dispatch) => {
+    const { result, error } = await dispatch(synchronousMutation(
+      operation,
+      variables,
+      root,
+      'DEDUPLICATION_ADMIN_ALERT_MUTATION',
+    ));
+    return { alert: result, error };
   };
 }
 
@@ -139,4 +155,15 @@ export function acknowledgeBiometricAlert(uuid) {
 
 export function resolveBiometricAlert(uuid, note) {
   return alertMutation(RESOLVE_ALERT_MUTATION, { id: uuid, note: note || null }, 'resolveBiometricAlert');
+}
+
+// Walks the audit chain on the server; resolves to { result, error } where
+// result is the stored check.
+export function verifyBiometricAuditChain() {
+  return synchronousMutation(
+    VERIFY_AUDIT_CHAIN_MUTATION,
+    {},
+    'verifyBiometricAuditChain',
+    'DEDUPLICATION_ADMIN_VERIFY_AUDIT_CHAIN',
+  );
 }

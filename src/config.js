@@ -6,6 +6,8 @@ import {
   DEFAULT_PAGE_SIZE,
   RIGHT_BIOMETRIC_ALERT_TRIAGE,
   RIGHT_BIOMETRIC_AUDIT_READ,
+  RIGHT_BIOMETRIC_AUDIT_VERIFY,
+  RIGHT_BIOMETRIC_CONFIG_READ,
   ROWS_PER_PAGE_OPTIONS,
 } from './constants';
 
@@ -42,4 +44,14 @@ export const auditReadRights = (mm) => asRights(conf(mm, CONFIG_KEYS.RIGHTS_AUDI
 export const alertTriageRights = (mm) => asRights(
   conf(mm, CONFIG_KEYS.RIGHTS_ALERT_TRIAGE),
   [RIGHT_BIOMETRIC_ALERT_TRIAGE],
+);
+
+export const configReadRights = (mm) => asRights(
+  conf(mm, CONFIG_KEYS.RIGHTS_CONFIG_READ),
+  [RIGHT_BIOMETRIC_CONFIG_READ],
+);
+
+export const auditVerifyRights = (mm) => asRights(
+  conf(mm, CONFIG_KEYS.RIGHTS_AUDIT_VERIFY),
+  [RIGHT_BIOMETRIC_AUDIT_VERIFY],
 );

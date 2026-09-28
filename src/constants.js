@@ -12,16 +12,22 @@ export const RIGHT_DUPLICATE_SEARCH = 172005;
 export const RIGHT_BIOMETRIC_READ = 174004;
 export const RIGHT_BIOMETRIC_AUDIT_READ = 174005;
 export const RIGHT_BIOMETRIC_ALERT_TRIAGE = 174006;
+export const RIGHT_BIOMETRIC_CONFIG_READ = 174007;
+export const RIGHT_BIOMETRIC_AUDIT_VERIFY = 174008;
 
 export const ROUTE_CANDIDATES = 'deduplication/candidates';
 export const ROUTE_CANDIDATE = 'deduplication/candidates/candidate';
 export const ROUTE_BIOMETRIC_ALERTS = 'deduplication/biometric/alerts';
 export const ROUTE_BIOMETRIC_AUDIT = 'deduplication/biometric/audit';
+export const ROUTE_BIOMETRIC_CRITERIA = 'deduplication/biometric/criteria';
+export const ROUTE_BIOMETRIC_RETENTION = 'deduplication/biometric/retention';
 
 export const REF_ROUTE_CANDIDATES = 'deduplication.route.candidates';
 export const REF_ROUTE_CANDIDATE = 'deduplication.route.candidate';
 export const REF_ROUTE_BIOMETRIC_ALERTS = 'deduplication.route.biometricAlerts';
 export const REF_ROUTE_BIOMETRIC_AUDIT = 'deduplication.route.biometricAudit';
+export const REF_ROUTE_BIOMETRIC_CRITERIA = 'deduplication.route.biometricCriteria';
+export const REF_ROUTE_BIOMETRIC_RETENTION = 'deduplication.route.biometricRetention';
 
 export const MODULE_KEY = 'deduplication';
 export const CONFIG_MODULE = 'fe-deduplication';
@@ -51,6 +57,8 @@ export const AUDIT_ACTIONS = [
   'alert.acknowledge',
   'alert.resolve',
 ];
+// Reasons services._erase() writes on an erasure tombstone.
+export const ERASURE_REASONS = ['retention', 'ACTIVE_AGE'];
 
 export const SUBJECT_CARD_CONTRIBUTION_KEY = 'deduplication.SubjectCard';
 export const MAIN_MENU_ID = 'deduplication.MainMenu';
@@ -69,4 +77,6 @@ export const CONFIG_KEYS = {
   ALERT_RULE_KINDS: 'alertRuleKinds',
   RIGHTS_AUDIT_READ: 'rights.auditRead',
   RIGHTS_ALERT_TRIAGE: 'rights.alertTriage',
+  RIGHTS_CONFIG_READ: 'rights.configRead',
+  RIGHTS_AUDIT_VERIFY: 'rights.auditVerify',
 };

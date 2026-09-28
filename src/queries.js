@@ -52,6 +52,17 @@ export const AUDIT_EVENT_PROJECTION = [
   'hash',
 ];
 
+export const ERASURE_PROJECTION = [
+  'id',
+  'subjectModel',
+  'subjectId',
+  'modalities',
+  'erased',
+  'reason',
+  'erasedBy',
+  'erasedAt',
+];
+
 const ALERT_FIELDS = ALERT_PROJECTION.join(' ');
 
 export const ACKNOWLEDGE_ALERT_MUTATION = `mutation AcknowledgeBiometricAlert($id: String!) {
@@ -70,7 +81,10 @@ export const BIOMETRIC_TEMPLATES_QUERY = `query BiometricTemplatesPanel($subject
   biometricTemplates(subjectId: $subjectId, subjectModel: $subjectModel) {
     id subjectModel subjectId modality position kind quality provider modelName encrypted
     validityFrom validityTo
-    qualityVerdict { status mode modality reasons version }
+    qualityVerdict {
+      status mode modality reasons version
+      measures { name value limit kind passed source detail }
+    }
   }
 }`;
 
@@ -91,4 +105,39 @@ export const CANDIDATE_STATUS_QUERY = `query DuplicateCandidateStatus($id: ID) {
   duplicateCandidates(id: $id, first: 1) {
     edges { node { id status reviewedBy reviewedAt } }
   }
+}`;
+
+const MODALITY_VALUES = '{ modality value }';
+const FUSION_RULES_FIELDS = `acceptThreshold reviewThreshold floors ${MODALITY_VALUES} floorDecision required
+    modalityThresholds ${MODALITY_VALUES} weights ${MODALITY_VALUES}`;
+
+export const DECISION_CRITERIA_QUERY = `query BiometricDecisionCriteria {
+  biometricDecisionCriteria {
+    base { ${FUSION_RULES_FIELDS} }
+    profiles {
+      name valid errors
+      overrides {
+        acceptThreshold reviewThreshold floors ${MODALITY_VALUES} floorDecision required
+        modalityThresholds ${MODALITY_VALUES}
+      }
+      effective { ${FUSION_RULES_FIELDS} }
+    }
+  }
+}`;
+
+export const RETENTION_POLICY_QUERY = `query BiometricRetentionPolicy {
+  biometricRetentionPolicy {
+    templateRetentionDays purgeEnabled activeTemplateRetentionDays purgeActiveEnabled
+  }
+}`;
+
+const CHAIN_CHECK_FIELDS = `id ok checkedAt checkedBy checked headSequence headHash
+    divergenceKind divergenceSequence divergenceDetail`;
+
+export const AUDIT_CHAIN_STATUS_QUERY = `query BiometricAuditChainStatus {
+  biometricAuditChainStatus { ${CHAIN_CHECK_FIELDS} }
+}`;
+
+export const VERIFY_AUDIT_CHAIN_MUTATION = `mutation VerifyBiometricAuditChain {
+  verifyBiometricAuditChain { ${CHAIN_CHECK_FIELDS} }
 }`;
