@@ -19,6 +19,7 @@ import BiometricAlertsPage from './pages/BiometricAlertsPage';
 import BiometricAuditPage from './pages/BiometricAuditPage';
 import BiometricCriteriaPage from './pages/BiometricCriteriaPage';
 import BiometricRetentionPage from './pages/BiometricRetentionPage';
+import BiometricVerificationsPage from './pages/BiometricVerificationsPage';
 import DuplicateCandidateSearcher from './components/candidates/DuplicateCandidateSearcher';
 import SubjectCard from './components/candidates/SubjectCard';
 import IndividualSubjectCard from './components/candidates/IndividualSubjectCard';
@@ -37,15 +38,18 @@ import {
   REF_ROUTE_BIOMETRIC_AUDIT,
   REF_ROUTE_BIOMETRIC_CRITERIA,
   REF_ROUTE_BIOMETRIC_RETENTION,
+  REF_ROUTE_BIOMETRIC_VERIFICATIONS,
   REF_ROUTE_CANDIDATE,
   REF_ROUTE_CANDIDATES,
   RIGHT_BIOMETRIC_AUDIT_READ,
   RIGHT_BIOMETRIC_CONFIG_READ,
+  RIGHT_BIOMETRIC_READ,
   RIGHT_DUPLICATE_SEARCH,
   ROUTE_BIOMETRIC_ALERTS,
   ROUTE_BIOMETRIC_AUDIT,
   ROUTE_BIOMETRIC_CRITERIA,
   ROUTE_BIOMETRIC_RETENTION,
+  ROUTE_BIOMETRIC_VERIFICATIONS,
   ROUTE_CANDIDATE,
   ROUTE_CANDIDATES,
   SUBJECT_CARD_CONTRIBUTION_KEY,
@@ -79,6 +83,7 @@ const DEFAULT_CONFIG = {
     { key: REF_ROUTE_BIOMETRIC_AUDIT, ref: ROUTE_BIOMETRIC_AUDIT },
     { key: REF_ROUTE_BIOMETRIC_CRITERIA, ref: ROUTE_BIOMETRIC_CRITERIA },
     { key: REF_ROUTE_BIOMETRIC_RETENTION, ref: ROUTE_BIOMETRIC_RETENTION },
+    { key: REF_ROUTE_BIOMETRIC_VERIFICATIONS, ref: ROUTE_BIOMETRIC_VERIFICATIONS },
     { key: 'deduplication.DuplicateCandidateSearcher', ref: DuplicateCandidateSearcher },
     { key: 'deduplication.BiometricTemplatesPanel', ref: BiometricTemplatesPanel },
     { key: 'deduplication.SubjectCard', ref: SubjectCard },
@@ -117,6 +122,7 @@ function adminContributions(cfg) {
       { route: ROUTE_BIOMETRIC_AUDIT },
       { route: ROUTE_BIOMETRIC_CRITERIA },
       { route: ROUTE_BIOMETRIC_RETENTION },
+      { route: ROUTE_BIOMETRIC_VERIFICATIONS },
     );
     routes.push(
       {
@@ -150,6 +156,14 @@ function adminContributions(cfg) {
         icon: 'AutoDelete',
         rights: [...new Set([...configRights, ...auditRights])],
         component: BiometricRetentionPage,
+      },
+      {
+        path: ROUTE_BIOMETRIC_VERIFICATIONS,
+        text: 'deduplication.menu.biometricVerifications',
+        id: 'deduplication.biometricVerifications',
+        icon: 'Fingerprint',
+        rights: [RIGHT_BIOMETRIC_READ],
+        component: BiometricVerificationsPage,
       },
     );
     contributions['individual.TabPanel.label'] = [SubjectBiometricsTabLabel];

@@ -4,6 +4,7 @@ import {
   DECISION_OUTCOMES,
   VERIFICATION_MODALITIES,
   VERIFICATION_NODE_TYPE,
+  codeLabel,
   decisionFilterFragment,
   decisionLegs,
   fusionReason,
@@ -206,4 +207,13 @@ test('verificationScreenAccess gates the page, the matched subject and the profi
   assert.deepEqual(verificationScreenAccess(null, gates), {
     canRead: false, canIdentify: false, canFilterProfiles: false,
   });
+});
+
+test('codeLabel translates a code, falls back to it raw and dashes an empty one', () => {
+  const messages = { 'm.skip.no_device_template': "L'appareil n'a transmis aucun gabarit" };
+  assert.equal(codeLabel(messages, 'm.skip', 'no_device_template'), "L'appareil n'a transmis aucun gabarit");
+  assert.equal(codeLabel(messages, 'm.skip', 'new_reason'), 'new_reason');
+  assert.equal(codeLabel(messages, 'm.skip', ''), '—');
+  assert.equal(codeLabel(messages, 'm.skip', null), '—');
+  assert.equal(codeLabel(null, 'm.skip', 'x'), 'x');
 });
