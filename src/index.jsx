@@ -18,6 +18,7 @@ import DuplicateCandidatePage from './pages/DuplicateCandidatePage';
 import BiometricAlertsPage from './pages/BiometricAlertsPage';
 import BiometricAuditPage from './pages/BiometricAuditPage';
 import BiometricCriteriaPage from './pages/BiometricCriteriaPage';
+import BiometricRetentionPage from './pages/BiometricRetentionPage';
 import DuplicateCandidateSearcher from './components/candidates/DuplicateCandidateSearcher';
 import SubjectCard from './components/candidates/SubjectCard';
 import IndividualSubjectCard from './components/candidates/IndividualSubjectCard';
@@ -35,6 +36,7 @@ import {
   REF_ROUTE_BIOMETRIC_ALERTS,
   REF_ROUTE_BIOMETRIC_AUDIT,
   REF_ROUTE_BIOMETRIC_CRITERIA,
+  REF_ROUTE_BIOMETRIC_RETENTION,
   REF_ROUTE_CANDIDATE,
   REF_ROUTE_CANDIDATES,
   RIGHT_BIOMETRIC_AUDIT_READ,
@@ -43,6 +45,7 @@ import {
   ROUTE_BIOMETRIC_ALERTS,
   ROUTE_BIOMETRIC_AUDIT,
   ROUTE_BIOMETRIC_CRITERIA,
+  ROUTE_BIOMETRIC_RETENTION,
   ROUTE_CANDIDATE,
   ROUTE_CANDIDATES,
   SUBJECT_CARD_CONTRIBUTION_KEY,
@@ -75,6 +78,7 @@ const DEFAULT_CONFIG = {
     { key: REF_ROUTE_BIOMETRIC_ALERTS, ref: ROUTE_BIOMETRIC_ALERTS },
     { key: REF_ROUTE_BIOMETRIC_AUDIT, ref: ROUTE_BIOMETRIC_AUDIT },
     { key: REF_ROUTE_BIOMETRIC_CRITERIA, ref: ROUTE_BIOMETRIC_CRITERIA },
+    { key: REF_ROUTE_BIOMETRIC_RETENTION, ref: ROUTE_BIOMETRIC_RETENTION },
     { key: 'deduplication.DuplicateCandidateSearcher', ref: DuplicateCandidateSearcher },
     { key: 'deduplication.BiometricTemplatesPanel', ref: BiometricTemplatesPanel },
     { key: 'deduplication.SubjectCard', ref: SubjectCard },
@@ -108,7 +112,12 @@ function adminContributions(cfg) {
   ];
   const contributions = {};
   if (biometricEnabled) {
-    menu.push({ route: ROUTE_BIOMETRIC_ALERTS }, { route: ROUTE_BIOMETRIC_AUDIT }, { route: ROUTE_BIOMETRIC_CRITERIA });
+    menu.push(
+      { route: ROUTE_BIOMETRIC_ALERTS },
+      { route: ROUTE_BIOMETRIC_AUDIT },
+      { route: ROUTE_BIOMETRIC_CRITERIA },
+      { route: ROUTE_BIOMETRIC_RETENTION },
+    );
     routes.push(
       {
         path: ROUTE_BIOMETRIC_ALERTS,
@@ -133,6 +142,14 @@ function adminContributions(cfg) {
         icon: 'Rule',
         rights: configRights,
         component: BiometricCriteriaPage,
+      },
+      {
+        path: ROUTE_BIOMETRIC_RETENTION,
+        text: 'deduplication.menu.biometricRetention',
+        id: 'deduplication.biometricRetention',
+        icon: 'AutoDelete',
+        rights: [...new Set([...configRights, ...auditRights])],
+        component: BiometricRetentionPage,
       },
     );
     contributions['individual.TabPanel.label'] = [SubjectBiometricsTabLabel];
