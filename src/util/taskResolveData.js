@@ -6,6 +6,7 @@ import { DECISION_SAME, STATUS_OPEN, validateResolution } from './candidates.js'
 export const TASK_FORM_RECORDED = 'recorded';
 export const TASK_FORM_RESOLVED_ELSEWHERE = 'resolvedElsewhere';
 export const TASK_FORM_OPEN = 'open';
+export const TASK_FORM_NO_RIGHT = 'noRight';
 
 // The body of a GraphQL string literal whose value is the JSON text of `obj`;
 // resolveTask receives it as `additionalData: "<body>"`.
@@ -34,11 +35,13 @@ export function buildTaskResolution({ decision, keep, note }, candidateData) {
   return resolution;
 }
 
-// Mode of the task form. A decision the task recorded wins; otherwise a
-// candidate whose current status is not OPEN was resolved elsewhere. A null
-// `currentCandidate` (status unreadable) leaves the form open.
-export function taskFormMode(recorded, currentCandidate) {
+// Mode of the task form. A decision the task recorded wins; otherwise a status
+// query refused for lack of rights closes the form, and a candidate whose
+// current status is not OPEN was resolved elsewhere. A null `currentCandidate`
+// that was not refused (still loading, or unreadable) leaves the form open.
+export function taskFormMode(recorded, currentCandidate, { statusRefused = false } = {}) {
   if (recorded) return TASK_FORM_RECORDED;
+  if (statusRefused) return TASK_FORM_NO_RIGHT;
   if (isPlainObject(currentCandidate) && currentCandidate.status !== STATUS_OPEN) {
     return TASK_FORM_RESOLVED_ELSEWHERE;
   }
@@ -49,7 +52,7 @@ export function taskFormMode(recorded, currentCandidate) {
 // null sends no decision, a string is the encoded resolution.
 export function taskAdditionalData(mode, { decision, keep, note }, candidateData) {
   if (mode === TASK_FORM_RECORDED || !isPlainObject(candidateData)) return undefined;
-  if (mode === TASK_FORM_RESOLVED_ELSEWHERE) return null;
+  if (mode === TASK_FORM_RESOLVED_ELSEWHERE || mode === TASK_FORM_NO_RIGHT) return null;
   try {
     return encodeAdditionalData(buildTaskResolution({ decision, keep, note }, candidateData));
   } catch {

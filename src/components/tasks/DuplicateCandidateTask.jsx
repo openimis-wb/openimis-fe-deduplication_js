@@ -12,13 +12,14 @@ import {
 import { useModulesManager, useTranslations } from '@openimis/fe-core';
 import { useIntl } from 'react-intl';
 import { MODULE_KEY } from '../../constants';
-import { useGqlQuery } from '../../hooks';
+import { isPermissionError, useGqlQuery } from '../../hooks';
 import { CANDIDATE_STATUS_QUERY } from '../../queries';
 import { DECISION_DIFFERENT, DECISION_SAME, evidenceRows } from '../../util/candidates';
 import {
   isPlainObject, isUuid, labelOr, parseJson,
 } from '../../util/gql';
 import {
+  TASK_FORM_NO_RIGHT,
   TASK_FORM_RESOLVED_ELSEWHERE,
   buildTaskResolution,
   decodeCompletedResolution,
@@ -30,7 +31,9 @@ import SubjectCard from '../candidates/SubjectCard';
 // Review form of a deduplication_candidate task. The decision goes to the task
 // as additionalData; completing the task resolves the candidate server-side.
 // A candidate already resolved elsewhere turns the form read-only and sends no
-// decision. When its status cannot be read, the form stays open.
+// decision. When reading its status is refused for lack of rights, the form says
+// so, disables its controls and sends no decision; when the status is otherwise
+// unreadable, the form stays open.
 function DuplicateCandidateTaskDisplay({ businessData, jsonExt, setAdditionalData }) {
   const intl = useIntl();
   const modulesManager = useModulesManager();
@@ -45,14 +48,15 @@ function DuplicateCandidateTaskDisplay({ businessData, jsonExt, setAdditionalDat
   const data = parseJson(businessData);
   const recorded = decodeCompletedResolution(parseJson(jsonExt));
   const candidateUuid = isPlainObject(data) && isUuid(data.id) ? data.id : null;
-  const { data: statusData } = useGqlQuery(
+  const { data: statusData, errors: statusErrors } = useGqlQuery(
     CANDIDATE_STATUS_QUERY,
     { id: candidateUuid },
     { skip: !!recorded || !candidateUuid },
   );
   const current = statusData?.duplicateCandidates?.edges?.[0]?.node ?? null;
-  const mode = taskFormMode(recorded, current);
+  const mode = taskFormMode(recorded, current, { statusRefused: isPermissionError(statusErrors) });
   const resolvedElsewhere = mode === TASK_FORM_RESOLVED_ELSEWHERE;
+  const noRight = mode === TASK_FORM_NO_RIGHT;
 
   React.useEffect(() => {
     if (!setAdditionalData) return;
@@ -110,13 +114,24 @@ function DuplicateCandidateTaskDisplay({ businessData, jsonExt, setAdditionalDat
           )}
         </Alert>
       )}
+      {noRight && (
+        <Box mt={2}>
+          <Alert severity="warning">{formatMessage('tasks.candidate.notReadable')}</Alert>
+        </Box>
+      )}
       {!recorded && !resolvedElsewhere && (
         <Box mt={2}>
           <Typography variant="subtitle2">{formatMessage('tasks.candidate.decision')}</Typography>
           <RadioGroup value={decision ?? ''} onChange={(e) => setDecision(e.target.value)}>
-            <FormControlLabel value={DECISION_SAME} control={<Radio />} label={formatMessage('resolve.same')} />
+            <FormControlLabel
+              value={DECISION_SAME}
+              disabled={noRight}
+              control={<Radio />}
+              label={formatMessage('resolve.same')}
+            />
             <FormControlLabel
               value={DECISION_DIFFERENT}
+              disabled={noRight}
               control={<Radio />}
               label={formatMessage('resolve.different')}
             />
@@ -129,6 +144,7 @@ function DuplicateCandidateTaskDisplay({ businessData, jsonExt, setAdditionalDat
                   <FormControlLabel
                     key={subjectId}
                     value={subjectId}
+                    disabled={noRight}
                     control={<Radio />}
                     label={formatMessageWithValues(index === 0 ? 'resolve.keepA' : 'resolve.keepB', { id: subjectId })}
                   />
@@ -143,9 +159,10 @@ function DuplicateCandidateTaskDisplay({ businessData, jsonExt, setAdditionalDat
             margin="dense"
             label={formatMessage('resolve.note')}
             value={note}
+            disabled={noRight}
             onChange={(e) => setNote(e.target.value)}
           />
-          {!valid && <Alert severity="warning">{formatMessage('tasks.candidate.incomplete')}</Alert>}
+          {!valid && !noRight && <Alert severity="warning">{formatMessage('tasks.candidate.incomplete')}</Alert>}
         </Box>
       )}
     </Box>
