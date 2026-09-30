@@ -212,9 +212,9 @@ test('taskAdditionalData still sends a merge for a pair another kind already mer
 });
 
 test('taskFormGate closes the buttons only in no-right mode', () => {
-  assert.deepEqual(taskFormGate(TASK_FORM_NO_RIGHT), { noRight: true });
+  assert.deepEqual(taskFormGate(TASK_FORM_NO_RIGHT), { noRight: true, approvalBlocked: false });
   [TASK_FORM_OPEN, TASK_FORM_RECORDED, TASK_FORM_RESOLVED_ELSEWHERE].forEach((mode) => {
-    assert.deepEqual(taskFormGate(mode), { noRight: false }, mode);
+    assert.deepEqual(taskFormGate(mode), { noRight: false, approvalBlocked: false }, mode);
   });
 });
 
@@ -239,4 +239,22 @@ test('approve and reject need no gate to keep the plain status rule', () => {
   assert.equal(canApproveTask('ACCEPTED', false), true);
   assert.equal(canRejectTask('ACCEPTED', false), true);
   assert.equal(canApproveTask('ACCEPTED', true), false);
+});
+
+test('taskFormGate blocks the approval, not the rejection, while the resolve check refuses', () => {
+  const gate = taskFormGate(TASK_FORM_OPEN, { approvalBlocked: true });
+  assert.deepEqual(gate, { noRight: false, approvalBlocked: true });
+  assert.equal(canApproveTask('ACCEPTED', false, gate), false);
+  assert.equal(canRejectTask('ACCEPTED', false, gate), true);
+});
+
+test('taskFormGate keeps the approval open when the check does not refuse', () => {
+  assert.deepEqual(taskFormGate(TASK_FORM_OPEN, { approvalBlocked: false }), { noRight: false, approvalBlocked: false });
+  assert.deepEqual(taskFormGate(TASK_FORM_OPEN), { noRight: false, approvalBlocked: false });
+});
+
+test('a resolve check refused for lack of rights closes the form like a refused status query', () => {
+  assert.equal(taskFormMode(null, { status: 'OPEN' }, { checkRefused: true }), TASK_FORM_NO_RIGHT);
+  assert.equal(taskFormMode(null, null, { checkRefused: true }), TASK_FORM_NO_RIGHT);
+  assert.equal(taskFormMode([{ userId: 'u' }], { status: 'OPEN' }, { checkRefused: true }), TASK_FORM_RECORDED);
 });

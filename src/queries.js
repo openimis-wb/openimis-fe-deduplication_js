@@ -172,6 +172,15 @@ export const PAIR_STATUS_QUERY = `query DeduplicationPairStatus(
   }
 }`;
 
+// Runs the checks resolveDuplicateCandidate would run for a decision, and writes nothing.
+export const RESOLVE_CHECK_QUERY = `query DuplicateCandidateResolveCheck(
+  $candidateId: UUID!, $decision: String!, $keep: String
+) {
+  duplicateCandidateResolveCheck(candidateId: $candidateId, decision: $decision, keep: $keep) {
+    ok code message
+  }
+}`;
+
 export const USERNAME_QUERY = `query DeduplicationUsername($id: ID) {
   users(id: $id, first: 1) { edges { node { username } } }
 }`;

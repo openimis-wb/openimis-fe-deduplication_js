@@ -63,13 +63,14 @@ export function canSubmitTaskResolution(taskStatus, submitting) {
 }
 
 // What the task form tells the approve and reject buttons, which live in another
-// component: in no-right mode neither may be used.
-export function taskFormGate(mode) {
-  return { noRight: mode === TASK_FORM_NO_RIGHT };
+// component: in no-right mode neither may be used, and while the server's resolve
+// check refuses the decision (or has not answered) the approval may not.
+export function taskFormGate(mode, { approvalBlocked = false } = {}) {
+  return { noRight: mode === TASK_FORM_NO_RIGHT, approvalBlocked };
 }
 
 export function canApproveTask(taskStatus, submitting, gate) {
-  return canSubmitTaskResolution(taskStatus, submitting) && !gate?.noRight;
+  return canSubmitTaskResolution(taskStatus, submitting) && !gate?.noRight && !gate?.approvalBlocked;
 }
 
 export function canRejectTask(taskStatus, submitting, gate) {
@@ -96,13 +97,13 @@ export function buildTaskResolution({ decision, keep, note }, candidateData) {
 }
 
 // Mode of the task form. `recorded` is the final resolution of a COMPLETED task
-// and wins; otherwise a status query refused for lack of rights closes the form,
-// and a candidate whose current status is not OPEN was resolved elsewhere. A null
-// `currentCandidate` that was not refused (still loading, or unreadable) leaves
-// the form open.
-export function taskFormMode(recorded, currentCandidate, { statusRefused = false } = {}) {
+// and wins; otherwise a status query or a resolve check refused for lack of rights
+// closes the form, and a candidate whose current status is not OPEN was resolved
+// elsewhere. A null `currentCandidate` that was not refused (still loading, or
+// unreadable) leaves the form open.
+export function taskFormMode(recorded, currentCandidate, { statusRefused = false, checkRefused = false } = {}) {
   if (recorded) return TASK_FORM_RECORDED;
-  if (statusRefused) return TASK_FORM_NO_RIGHT;
+  if (statusRefused || checkRefused) return TASK_FORM_NO_RIGHT;
   if (isPlainObject(currentCandidate) && currentCandidate.status !== STATUS_OPEN) {
     return TASK_FORM_RESOLVED_ELSEWHERE;
   }
