@@ -90,6 +90,8 @@ export function buildResolveInput({
 
 // State of the pair across candidate kinds. `subjectStates` maps a subject id
 // to {isDeleted, retiredInto} as read from the subject records, when readable.
+// `canDismiss` is false once another kind merged the pair: the server refuses a
+// `different` on it (pair_already_merged).
 export function siblingState(candidate, siblings, subjectStates = {}) {
   const pair = keepOptions(candidate);
   const confirmed = (Array.isArray(siblings) ? siblings : []).filter(
@@ -116,6 +118,7 @@ export function siblingState(candidate, siblings, subjectStates = {}) {
   return {
     mergedAlready,
     keptId,
+    canDismiss: !mergedAlready,
     conflictingKeep: (keep) => mergedAlready && keep !== keptId,
   };
 }

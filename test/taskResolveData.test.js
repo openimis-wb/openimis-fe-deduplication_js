@@ -184,3 +184,26 @@ test('taskFormMode still shows a recorded decision when the status query is refu
 test('taskAdditionalData sends no decision when the candidate status is refused', () => {
   assert.equal(taskAdditionalData(TASK_FORM_NO_RIGHT, filledForm, businessData), null);
 });
+
+test('taskAdditionalData sends no dismissal for a pair another kind already merged', () => {
+  const dismissal = { decision: 'different', keep: null, note: 'not the same person' };
+  assert.equal(
+    taskAdditionalData(TASK_FORM_OPEN, dismissal, businessData, { canDismiss: false }),
+    null,
+  );
+  assert.equal(
+    taskAdditionalData(TASK_FORM_OPEN, dismissal, businessData, { canDismiss: true }),
+    encodeAdditionalData({ decision: 'different', note: 'not the same person' }),
+  );
+  assert.equal(
+    taskAdditionalData(TASK_FORM_OPEN, dismissal, businessData),
+    encodeAdditionalData({ decision: 'different', note: 'not the same person' }),
+  );
+});
+
+test('taskAdditionalData still sends a merge for a pair another kind already merged', () => {
+  assert.equal(
+    taskAdditionalData(TASK_FORM_OPEN, filledForm, businessData, { canDismiss: false }),
+    encodeAdditionalData({ decision: 'same', keep: A, note: 'ok' }),
+  );
+});

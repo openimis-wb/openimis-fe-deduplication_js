@@ -176,6 +176,20 @@ test('siblingState ignores OPEN and DISMISSED siblings', () => {
   assert.equal(state.conflictingKeep(A), false);
 });
 
+test('siblingState refuses to dismiss a pair another kind already merged', () => {
+  const merged = [candidate, {
+    id: 'rel-2', status: 'CONFIRMED', subjectA: A, subjectB: B,
+  }];
+  assert.equal(siblingState(candidate, merged, {}).canDismiss, false);
+  assert.equal(siblingState(candidate, [candidate], {}).canDismiss, true);
+  assert.equal(siblingState(candidate, [candidate, {
+    id: 'rel-3', status: 'DISMISSED', subjectA: A, subjectB: B,
+  }], {}).canDismiss, true);
+  assert.equal(siblingState(candidate, [{
+    id: 'rel-4', status: 'CONFIRMED', subjectA: A, subjectB: C,
+  }], {}).canDismiss, true);
+});
+
 test('evidenceRows reads column evidence as a string or an object', () => {
   const evidence = { columns: { first_name: 'A', dob: '2000-01-01' } };
   const expected = [['first_name', 'A'], ['dob', '2000-01-01']];
