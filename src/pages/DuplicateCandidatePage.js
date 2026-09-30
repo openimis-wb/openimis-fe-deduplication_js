@@ -24,9 +24,8 @@ import {
 import {
   hasRight, isUuid, labelOr, toUuid,
 } from '../util/gql';
-import {
-  mutationLogError, useAdminSlice, useMutationSettled, useUserRights,
-} from '../components/common/adminHooks';
+import { mutationFailureText } from '../util/mutationLog';
+import { useAdminSlice, useMutationSettled, useUserRights } from '../components/common/adminHooks';
 import { useAdminStyles, usePageStyles } from '../components/common/adminStyles';
 import SubjectCard, { StyledCard } from '../components/candidates/SubjectCard';
 import ResolvePanel from '../components/candidates/ResolvePanel';
@@ -62,7 +61,9 @@ function DuplicateCandidatePage() {
   }, [candidateUuid]);
 
   useMutationSettled([ADMIN_ACTION_TYPE.RESOLVE_CANDIDATE], (log) => {
-    const failure = log?.status === 1 ? (mutationLogError(log) || formatMessage('resolve.failed')) : null;
+    const failure = log?.status === 1
+      ? (mutationFailureText(log, intl.messages) || formatMessage('resolve.failed'))
+      : null;
     setOutcome(failure ? { severity: 'error', text: failure } : null);
     if (validId) dispatch(fetchDuplicateCandidate(candidateUuid));
     setRefreshKey((key) => key + 1);
