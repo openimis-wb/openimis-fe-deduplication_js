@@ -162,6 +162,16 @@ export const CANDIDATE_STATUS_QUERY = `query DuplicateCandidateStatus($id: ID) {
   }
 }`;
 
+export const PAIR_STATUS_QUERY = `query DeduplicationPairStatus(
+  $subjectModel: String, $subjectA: String, $subjectB: String
+) {
+  duplicateCandidates(
+    subjectModel: $subjectModel, subjectA: $subjectA, subjectB: $subjectB, first: 20
+  ) {
+    edges { node { id subjectA subjectB status } }
+  }
+}`;
+
 export const USERNAME_QUERY = `query DeduplicationUsername($id: ID) {
   users(id: $id, first: 1) { edges { node { username } } }
 }`;

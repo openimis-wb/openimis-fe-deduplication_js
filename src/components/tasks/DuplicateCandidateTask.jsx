@@ -14,8 +14,10 @@ import { useIntl } from 'react-intl';
 import { useSelector } from 'react-redux';
 import { MODULE_KEY } from '../../constants';
 import { isPermissionError, useGqlQuery } from '../../hooks';
-import { CANDIDATE_STATUS_QUERY, USERNAME_QUERY } from '../../queries';
-import { DECISION_DIFFERENT, DECISION_SAME, evidenceRows } from '../../util/candidates';
+import { CANDIDATE_STATUS_QUERY, PAIR_STATUS_QUERY, USERNAME_QUERY } from '../../queries';
+import {
+  DECISION_DIFFERENT, DECISION_SAME, evidenceRows, siblingState,
+} from '../../util/candidates';
 import {
   isPlainObject, isUuid, labelOr, parseJson,
 } from '../../util/gql';
@@ -96,15 +98,25 @@ function DuplicateCandidateTaskDisplay({ businessData, jsonExt, setAdditionalDat
     { skip: !!recorded || !candidateUuid },
   );
   const current = statusData?.duplicateCandidates?.edges?.[0]?.node ?? null;
+  const { data: pairData } = useGqlQuery(
+    PAIR_STATUS_QUERY,
+    { subjectModel: data?.subject_model, subjectA: data?.subject_a, subjectB: data?.subject_b },
+    { skip: !!recorded || !candidateUuid || !data?.subject_a || !data?.subject_b },
+  );
+  const pairState = siblingState(
+    { id: current?.id, subjectA: data?.subject_a, subjectB: data?.subject_b },
+    (pairData?.duplicateCandidates?.edges ?? []).map((edge) => edge?.node),
+  );
+  const { canDismiss } = pairState;
   const mode = taskFormMode(recorded, current, { statusRefused: isPermissionError(statusErrors) });
   const resolvedElsewhere = mode === TASK_FORM_RESOLVED_ELSEWHERE;
   const noRight = mode === TASK_FORM_NO_RIGHT;
 
   React.useEffect(() => {
     if (!setAdditionalData) return;
-    const additionalData = taskAdditionalData(mode, { decision, keep, note }, data);
+    const additionalData = taskAdditionalData(mode, { decision, keep, note }, data, { canDismiss });
     if (additionalData !== undefined) setAdditionalData(additionalData);
-  }, [decision, keep, note, mode]);
+  }, [decision, keep, note, mode, canDismiss]);
 
   if (!isPlainObject(data) || !data.subject_a || !data.subject_b) return null;
 
@@ -114,7 +126,7 @@ function DuplicateCandidateTaskDisplay({ businessData, jsonExt, setAdditionalDat
     .join(' · ');
   const kindLabel = labelOr(intl.messages, `${MODULE_KEY}.candidate.kind.${data.kind}`, data.kind);
 
-  let valid = true;
+  let valid = canDismiss || decision !== DECISION_DIFFERENT;
   try {
     buildTaskResolution({ decision, keep, note }, data);
   } catch {
@@ -187,11 +199,16 @@ function DuplicateCandidateTaskDisplay({ businessData, jsonExt, setAdditionalDat
             />
             <FormControlLabel
               value={DECISION_DIFFERENT}
-              disabled={noRight}
+              disabled={noRight || !canDismiss}
               control={<Radio />}
               label={formatMessage('resolve.different')}
             />
           </RadioGroup>
+          {!canDismiss && (
+            <Typography variant="caption" component="div">
+              {formatMessage('resolve.refusal.pair_already_merged')}
+            </Typography>
+          )}
           {decision === DECISION_SAME && (
             <>
               <Typography variant="subtitle2">{formatMessage('resolve.keepLabel')}</Typography>

@@ -2,7 +2,7 @@
 /* eslint-disable import/extensions -- node --test resolves ESM imports only with the extension */
 import { isEmptyValue, isPlainObject } from './gql.js';
 import {
-  DECISION_SAME, OPEN_TASK_STATUSES, STATUS_OPEN, validateResolution,
+  DECISION_DIFFERENT, DECISION_SAME, OPEN_TASK_STATUSES, STATUS_OPEN, validateResolution,
 } from './candidates.js';
 
 export const TASK_FORM_RECORDED = 'recorded';
@@ -96,10 +96,13 @@ export function taskFormMode(recorded, currentCandidate, { statusRefused = false
 }
 
 // What the task form hands to setAdditionalData: undefined leaves it untouched,
-// null sends no decision, a string is the encoded resolution.
-export function taskAdditionalData(mode, { decision, keep, note }, candidateData) {
+// null sends no decision, a string is the encoded resolution. A dismissal of a
+// pair another kind already merged is refused by the server, so `canDismiss: false`
+// sends no decision for it.
+export function taskAdditionalData(mode, { decision, keep, note }, candidateData, { canDismiss = true } = {}) {
   if (mode === TASK_FORM_RECORDED || !isPlainObject(candidateData)) return undefined;
   if (mode === TASK_FORM_RESOLVED_ELSEWHERE || mode === TASK_FORM_NO_RIGHT) return null;
+  if (decision === DECISION_DIFFERENT && !canDismiss) return null;
   try {
     return encodeAdditionalData(buildTaskResolution({ decision, keep, note }, candidateData));
   } catch {

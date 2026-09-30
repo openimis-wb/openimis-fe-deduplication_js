@@ -22,6 +22,7 @@ import { StyledCard } from './SubjectCard';
 // Resolve controls of an OPEN candidate. The kept subject is always chosen
 // explicitly; when another kind of this pair was already merged, keep is locked
 // to the subject that merge kept, and merging is blocked when that subject is unknown.
+// Such a pair can no longer be dismissed as different persons.
 function ResolvePanel({ candidate, pairState, submitting }) {
   const dispatch = useDispatch();
   const modulesManager = useModulesManager();
@@ -114,10 +115,19 @@ function ResolvePanel({ candidate, pairState, submitting }) {
         <Button variant="contained" color="primary" disabled={!canMerge} onClick={() => ask(DECISION_SAME)}>
           {formatMessage('resolve.same')}
         </Button>
-        <Button variant="outlined" disabled={submitting} onClick={() => ask(DECISION_DIFFERENT)}>
+        <Button
+          variant="outlined"
+          disabled={submitting || !pairState.canDismiss}
+          onClick={() => ask(DECISION_DIFFERENT)}
+        >
           {formatMessage('resolve.different')}
         </Button>
       </Box>
+      {!pairState.canDismiss && (
+        <Box mt={1}>
+          <Typography variant="caption">{formatMessage('resolve.refusal.pair_already_merged')}</Typography>
+        </Box>
+      )}
     </StyledCard>
   );
 }
