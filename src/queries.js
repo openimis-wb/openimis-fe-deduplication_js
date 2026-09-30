@@ -162,6 +162,10 @@ export const CANDIDATE_STATUS_QUERY = `query DuplicateCandidateStatus($id: ID) {
   }
 }`;
 
+export const USERNAME_QUERY = `query DeduplicationUsername($id: ID) {
+  users(id: $id, first: 1) { edges { node { username } } }
+}`;
+
 const MODALITY_VALUES = '{ modality value }';
 const FUSION_RULES_FIELDS = `acceptThreshold reviewThreshold floors ${MODALITY_VALUES} floorDecision required
     modalityThresholds ${MODALITY_VALUES} weights ${MODALITY_VALUES}`;

@@ -19,6 +19,7 @@ import {
   DuplicateCandidateTaskItemFormatters,
   DuplicateCandidateTaskTableHeaders,
 } from './components/tasks/DuplicateCandidateTask';
+import DuplicateCandidateTaskConfirmation from './components/tasks/DuplicateCandidateTaskConfirmation';
 import DeduplicationMainMenu from './menus/DeduplicationMainMenu';
 import DuplicateCandidatesPage from './pages/DuplicateCandidatesPage';
 import DuplicateCandidatePage from './pages/DuplicateCandidatePage';
@@ -93,6 +94,7 @@ const DEFAULT_CONFIG = {
     text: <FormattedMessage module="deduplication" id="tasks.candidate.title" />,
     tableHeaders: DuplicateCandidateTaskTableHeaders,
     itemFormatters: DuplicateCandidateTaskItemFormatters,
+    confirmationPanel: DuplicateCandidateTaskConfirmation,
     taskSource: [CANDIDATE_TASK_SOURCE],
   }],
   'core.MainMenu': [{ name: MAIN_MENU_ID, component: DeduplicationMainMenu }],

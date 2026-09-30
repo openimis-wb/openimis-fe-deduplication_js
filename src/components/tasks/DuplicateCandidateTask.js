@@ -11,29 +11,57 @@ import {
 import { Alert } from '@material-ui/lab';
 import { useModulesManager, useTranslations } from '@openimis/fe-core';
 import { useIntl } from 'react-intl';
+import { useSelector } from 'react-redux';
 import { MODULE_KEY } from '../../constants';
 import { isPermissionError, useGqlQuery } from '../../hooks';
-import { CANDIDATE_STATUS_QUERY } from '../../queries';
+import { CANDIDATE_STATUS_QUERY, USERNAME_QUERY } from '../../queries';
 import { DECISION_DIFFERENT, DECISION_SAME, evidenceRows } from '../../util/candidates';
 import {
   isPlainObject, isUuid, labelOr, parseJson,
 } from '../../util/gql';
 import {
   TASK_FORM_NO_RIGHT,
+  TASK_FORM_OPEN,
   TASK_FORM_RESOLVED_ELSEWHERE,
   buildTaskResolution,
-  decodeCompletedResolution,
+  finalResolutions,
+  formStateFromResolution,
+  otherResolutions,
+  ownResolution,
   taskAdditionalData,
+  taskAwaitsDecision,
   taskFormMode,
 } from '../../util/taskResolveData';
 import SubjectCard from '../candidates/SubjectCard';
 
+// One approver's stored decision. The approver is named by username; the user id
+// stands in when the name cannot be read.
+function StoredResolution({ userId, resolution, own }) {
+  const modulesManager = useModulesManager();
+  const { formatMessage, formatMessageWithValues } = useTranslations(MODULE_KEY, modulesManager);
+  const { data } = useGqlQuery(USERNAME_QUERY, { id: userId }, { skip: own || !isUuid(userId) });
+  const who = own
+    ? formatMessage('tasks.candidate.entry.you')
+    : data?.users?.edges?.[0]?.node?.username ?? userId;
+  return (
+    <Typography variant="body2" component="div">
+      {formatMessageWithValues(
+        resolution.decision === DECISION_SAME ? 'tasks.candidate.entry.same' : 'tasks.candidate.entry.different',
+        { who, keep: resolution.keep ?? '—', note: resolution.note || '—' },
+      )}
+    </Typography>
+  );
+}
+
 // Review form of a deduplication_candidate task. The decision goes to the task
-// as additionalData; completing the task resolves the candidate server-side.
-// A candidate already resolved elsewhere turns the form read-only and sends no
-// decision. When reading its status is refused for lack of rights, the form says
-// so, disables its controls and sends no decision; when the status is otherwise
-// unreadable, the form stays open.
+// as additionalData; completing the task resolves the candidate server-side with
+// the entry of the approver who completes it. Until the task is COMPLETED the form
+// stays editable and starts from the current user's own stored entry, since a
+// refused completion leaves the entries on the task; only a COMPLETED task shows
+// them as final. A candidate already resolved elsewhere turns the form read-only
+// and sends no decision. When reading its status is refused for lack of rights,
+// the form says so, disables its controls and sends no decision; when the status
+// is otherwise unreadable, the form stays open.
 function DuplicateCandidateTaskDisplay({ businessData, jsonExt, setAdditionalData }) {
   const intl = useIntl();
   const modulesManager = useModulesManager();
@@ -41,12 +69,26 @@ function DuplicateCandidateTaskDisplay({ businessData, jsonExt, setAdditionalDat
     MODULE_KEY,
     modulesManager,
   );
-  const [decision, setDecision] = React.useState(null);
-  const [keep, setKeep] = React.useState(null);
-  const [note, setNote] = React.useState('');
+  const currentUserId = useSelector((state) => state.core?.user?.id ?? null);
+  const taskStatus = useSelector((state) => state.tasksManagement?.task?.status ?? null);
+
+  const storedExt = parseJson(jsonExt);
+  const own = ownResolution(storedExt, currentUserId);
+  const others = otherResolutions(storedExt, currentUserId);
+  const recorded = finalResolutions(storedExt, taskStatus);
+  const ownKey = JSON.stringify(own);
+  const [decision, setDecision] = React.useState(formStateFromResolution(own).decision);
+  const [keep, setKeep] = React.useState(formStateFromResolution(own).keep);
+  const [note, setNote] = React.useState(formStateFromResolution(own).note);
+
+  React.useEffect(() => {
+    const stored = formStateFromResolution(own);
+    setDecision(stored.decision);
+    setKeep(stored.keep);
+    setNote(stored.note);
+  }, [ownKey]);
 
   const data = parseJson(businessData);
-  const recorded = decodeCompletedResolution(parseJson(jsonExt));
   const candidateUuid = isPlainObject(data) && isUuid(data.id) ? data.id : null;
   const { data: statusData, errors: statusErrors } = useGqlQuery(
     CANDIDATE_STATUS_QUERY,
@@ -109,13 +151,31 @@ function DuplicateCandidateTaskDisplay({ businessData, jsonExt, setAdditionalDat
       {recorded && (
         <Box mt={2}>
           <Alert severity="info">
-            {formatMessageWithValues(
-              recorded.decision === DECISION_SAME
-                ? 'tasks.candidate.recorded.same'
-                : 'tasks.candidate.recorded.different',
-              { keep: recorded.keep ?? '—', note: recorded.note || '—' },
-            )}
+            <Typography variant="subtitle2">{formatMessage('tasks.candidate.recorded.title')}</Typography>
+            {recorded.map((entry) => (
+              <StoredResolution
+                key={entry.userId}
+                userId={entry.userId}
+                resolution={entry.resolution}
+                own={entry.userId === currentUserId}
+              />
+            ))}
           </Alert>
+        </Box>
+      )}
+      {!recorded && others.length > 0 && (
+        <Box mt={2}>
+          <Alert severity="info">
+            <Typography variant="subtitle2">{formatMessage('tasks.candidate.others.title')}</Typography>
+            {others.map((entry) => (
+              <StoredResolution key={entry.userId} userId={entry.userId} resolution={entry.resolution} />
+            ))}
+          </Alert>
+        </Box>
+      )}
+      {mode === TASK_FORM_OPEN && own && taskAwaitsDecision(taskStatus) && (
+        <Box mt={2}>
+          <Alert severity="info">{formatMessage('tasks.candidate.pending')}</Alert>
         </Box>
       )}
       {noRight && (

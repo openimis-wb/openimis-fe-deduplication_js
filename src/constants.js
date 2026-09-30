@@ -5,6 +5,10 @@ export const BASIC_FIELDS = [
 ];
 export const MODULE_NAME = 'Deduplication';
 
+// Business statuses the tasks module's resolve action takes.
+export const TASK_APPROVED = 'APPROVED';
+export const TASK_FAILED = 'FAILED';
+
 export const RIGHT_DUPLICATE_REVIEW_TASKS = 172001;
 export const RIGHT_DUPLICATE_RESOLVE = 172003;
 export const RIGHT_DUPLICATE_SCAN = 172004;

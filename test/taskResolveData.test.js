@@ -6,8 +6,13 @@ import {
   TASK_FORM_RECORDED,
   TASK_FORM_RESOLVED_ELSEWHERE,
   buildTaskResolution,
-  decodeCompletedResolution,
   encodeAdditionalData,
+  finalResolutions,
+  formStateFromResolution,
+  otherResolutions,
+  ownResolution,
+  canSubmitTaskResolution,
+  taskAwaitsDecision,
   taskAdditionalData,
   taskFormMode,
 } from '../src/util/taskResolveData.js';
@@ -24,16 +29,63 @@ test('encodeAdditionalData survives a GraphQL string literal round trip', () => 
   assert.ok(!/(^|[^\\])"/.test(s), 'every quote inside the literal body is escaped');
 });
 
-test('decodeCompletedResolution reads the first recorded resolution', () => {
+const ME = '0b8a4f62-51a7-4d1e-9c55-2d0f6f6d1a10';
+const OTHER = '7c1d90e4-8a0b-4f3e-b2a6-4e5d7c9b3f21';
+const storedBy = (entries) => ({ additional_resolve_data: entries });
+
+test('ownResolution reads the entry keyed by the given user id, never the first one', () => {
+  const jsonExt = storedBy({
+    [OTHER]: { decision: 'different', note: 'not mine' },
+    [ME]: { decision: 'same', keep: 'x', note: 'mine' },
+  });
+  assert.deepEqual(ownResolution(jsonExt, ME), { decision: 'same', keep: 'x', note: 'mine' });
+  assert.deepEqual(ownResolution(jsonExt, OTHER), { decision: 'different', note: 'not mine' });
+});
+
+test('ownResolution is null without a user id, an entry, or a usable entry', () => {
+  const jsonExt = storedBy({ [OTHER]: { decision: 'different' } });
+  assert.equal(ownResolution(jsonExt, ME), null);
+  assert.equal(ownResolution(jsonExt, null), null);
+  assert.equal(ownResolution(jsonExt, undefined), null);
+  assert.equal(ownResolution(null, ME), null);
+  assert.equal(ownResolution({}, ME), null);
+  assert.equal(ownResolution(true, ME), null);
+  assert.equal(ownResolution(storedBy({ [ME]: 'x' }), ME), null);
+  assert.equal(ownResolution(storedBy({}), ME), null);
+});
+
+test('otherResolutions lists the entries of the other approvers with their user id', () => {
+  const jsonExt = storedBy({
+    [ME]: { decision: 'same', keep: 'x' },
+    [OTHER]: { decision: 'different', note: 'n' },
+    bogus: 'not an entry',
+  });
+  assert.deepEqual(otherResolutions(jsonExt, ME), [{ userId: OTHER, resolution: { decision: 'different', note: 'n' } }]);
+  assert.equal(otherResolutions(jsonExt, null).length, 2);
+  assert.deepEqual(otherResolutions(null, ME), []);
+  assert.deepEqual(otherResolutions(storedBy({ [ME]: { decision: 'same' } }), ME), []);
+});
+
+test('finalResolutions shows the stored entries as final only once the task is COMPLETED', () => {
+  const jsonExt = storedBy({ [ME]: { decision: 'same', keep: 'x' }, [OTHER]: { decision: 'different' } });
+  assert.deepEqual(finalResolutions(jsonExt, 'COMPLETED'), [
+    { userId: ME, resolution: { decision: 'same', keep: 'x' } },
+    { userId: OTHER, resolution: { decision: 'different' } },
+  ]);
+  ['RECEIVED', 'ACCEPTED', 'FAILED', null, undefined].forEach((status) => {
+    assert.equal(finalResolutions(jsonExt, status), null, String(status));
+  });
+  assert.equal(finalResolutions(storedBy({}), 'COMPLETED'), null);
+  assert.equal(finalResolutions(null, 'COMPLETED'), null);
+});
+
+test('formStateFromResolution pre-fills the form from a stored entry', () => {
   assert.deepEqual(
-    decodeCompletedResolution({ additional_resolve_data: { 12: { decision: 'different' } } }),
-    { decision: 'different' },
+    formStateFromResolution({ decision: 'same', keep: A, note: 'ok' }),
+    { decision: 'same', keep: A, note: 'ok' },
   );
-  assert.equal(decodeCompletedResolution(null), null);
-  assert.equal(decodeCompletedResolution({}), null);
-  assert.equal(decodeCompletedResolution({ additional_resolve_data: {} }), null);
-  assert.equal(decodeCompletedResolution(true), null);
-  assert.equal(decodeCompletedResolution({ additional_resolve_data: { 1: 'x' } }), null);
+  assert.deepEqual(formStateFromResolution({ decision: 'different' }), { decision: 'different', keep: null, note: '' });
+  assert.deepEqual(formStateFromResolution(null), { decision: null, keep: null, note: '' });
 });
 
 test('buildTaskResolution keeps a subject of the pair only', () => {
@@ -50,7 +102,7 @@ test('buildTaskResolution keeps a subject of the pair only', () => {
   assert.throws(() => buildTaskResolution({ decision: 'merge', keep: A }, businessData), { message: 'invalid_decision' });
 });
 
-const recordedSame = { decision: 'same', keep: A, note: 'ok' };
+const recordedSame = finalResolutions(storedBy({ [ME]: { decision: 'same', keep: A, note: 'ok' } }), 'COMPLETED');
 const filledForm = { decision: 'same', keep: A, note: 'ok' };
 
 test('taskFormMode turns read-only once the candidate is resolved elsewhere', () => {
@@ -62,6 +114,13 @@ test('taskFormMode turns read-only once the candidate is resolved elsewhere', ()
 test('taskFormMode stays open when the candidate status cannot be read', () => {
   assert.equal(taskFormMode(null, null), TASK_FORM_OPEN);
   assert.equal(taskFormMode(null, undefined), TASK_FORM_OPEN);
+});
+
+test('a task that is not COMPLETED stays open and editable whatever it stored', () => {
+  const stored = finalResolutions(storedBy({ [ME]: { decision: 'same', keep: A } }), 'ACCEPTED');
+  assert.equal(stored, null);
+  assert.equal(taskFormMode(stored, { status: 'OPEN' }), TASK_FORM_OPEN);
+  assert.equal(taskFormMode(stored, null), TASK_FORM_OPEN);
 });
 
 test('taskFormMode shows the recorded decision before any current status', () => {
@@ -93,6 +152,24 @@ test('taskAdditionalData leaves a recorded task or unreadable business data unto
   );
   assert.equal(taskAdditionalData(TASK_FORM_OPEN, filledForm, null), undefined);
   assert.equal(taskAdditionalData(TASK_FORM_RESOLVED_ELSEWHERE, filledForm, 'x'), undefined);
+});
+
+test('the approve and reject buttons work again after a refused completion', () => {
+  // A refused completion leaves the task ACCEPTED with the approver already
+  // in its business status; only the task status and an in-flight resolve gate them.
+  assert.equal(canSubmitTaskResolution('ACCEPTED', false), true);
+  assert.equal(canSubmitTaskResolution('ACCEPTED', true), false);
+  ['RECEIVED', 'COMPLETED', 'FAILED', null, undefined].forEach((status) => {
+    assert.equal(canSubmitTaskResolution(status, false), false, String(status));
+  });
+});
+
+test('a stored decision is pending only while the task still awaits a decision', () => {
+  assert.equal(taskAwaitsDecision('RECEIVED'), true);
+  assert.equal(taskAwaitsDecision('ACCEPTED'), true);
+  ['COMPLETED', 'FAILED', null, undefined].forEach((status) => {
+    assert.equal(taskAwaitsDecision(status), false, String(status));
+  });
 });
 
 test('taskFormMode closes the form when reading the candidate status is refused', () => {
