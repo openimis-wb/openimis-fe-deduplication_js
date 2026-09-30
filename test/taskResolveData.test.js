@@ -11,9 +11,12 @@ import {
   formStateFromResolution,
   otherResolutions,
   ownResolution,
+  canApproveTask,
+  canRejectTask,
   canSubmitTaskResolution,
   taskAwaitsDecision,
   taskAdditionalData,
+  taskFormGate,
   taskFormMode,
 } from '../src/util/taskResolveData.js';
 
@@ -206,4 +209,34 @@ test('taskAdditionalData still sends a merge for a pair another kind already mer
     taskAdditionalData(TASK_FORM_OPEN, filledForm, businessData, { canDismiss: false }),
     encodeAdditionalData({ decision: 'same', keep: A, note: 'ok' }),
   );
+});
+
+test('taskFormGate closes the buttons only in no-right mode', () => {
+  assert.deepEqual(taskFormGate(TASK_FORM_NO_RIGHT), { noRight: true });
+  [TASK_FORM_OPEN, TASK_FORM_RECORDED, TASK_FORM_RESOLVED_ELSEWHERE].forEach((mode) => {
+    assert.deepEqual(taskFormGate(mode), { noRight: false }, mode);
+  });
+});
+
+test('approve and reject are disabled while the form is in no-right mode', () => {
+  const gate = taskFormGate(TASK_FORM_NO_RIGHT);
+  assert.equal(canApproveTask('ACCEPTED', false, gate), false);
+  assert.equal(canRejectTask('ACCEPTED', false, gate), false);
+});
+
+test('approve and reject follow the task status and the resolve in flight when the form is open', () => {
+  const gate = taskFormGate(TASK_FORM_OPEN);
+  assert.equal(canApproveTask('ACCEPTED', false, gate), true);
+  assert.equal(canRejectTask('ACCEPTED', false, gate), true);
+  [canApproveTask, canRejectTask].forEach((can) => {
+    assert.equal(can('ACCEPTED', true, gate), false);
+    assert.equal(can('COMPLETED', false, gate), false);
+    assert.equal(can('RECEIVED', false, gate), false);
+  });
+});
+
+test('approve and reject need no gate to keep the plain status rule', () => {
+  assert.equal(canApproveTask('ACCEPTED', false), true);
+  assert.equal(canRejectTask('ACCEPTED', false), true);
+  assert.equal(canApproveTask('ACCEPTED', true), false);
 });

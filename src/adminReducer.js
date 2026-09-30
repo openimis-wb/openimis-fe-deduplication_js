@@ -11,6 +11,7 @@ import {
 } from '@openimis/fe-core';
 import { ERROR, REQUEST, SUCCESS } from './util/action-type';
 import { mutationRejected } from './util/mutations';
+import { TASK_FORM_OPEN, taskFormGate } from './util/taskResolveData';
 
 export const ADMIN_ACTION_TYPE = {
   MUTATION: 'DEDUPLICATION_ADMIN_MUTATION',
@@ -25,6 +26,7 @@ export const ADMIN_ACTION_TYPE = {
   RESOLVE_CANDIDATE: 'DEDUPLICATION_ADMIN_RESOLVE_CANDIDATE',
   RUN_SCAN: 'DEDUPLICATION_ADMIN_RUN_SCAN',
   CREATE_REVIEW_TASKS: 'DEDUPLICATION_ADMIN_CREATE_REVIEW_TASKS',
+  SET_TASK_FORM_GATE: 'DEDUPLICATION_ADMIN_SET_TASK_FORM_GATE',
 };
 
 export const ADMIN_MUTATION_SERVICE = {
@@ -60,6 +62,7 @@ const emptySlice = () => ({
 const INITIAL_STATE = {
   submittingMutation: false,
   mutation: {},
+  taskFormGate: taskFormGate(TASK_FORM_OPEN),
   ...Object.fromEntries(Object.keys(SLICES).map((slice) => [slice, emptySlice()])),
 };
 
@@ -129,6 +132,8 @@ function adminReducer(state = INITIAL_STATE, action) {
       return mutationResponse(state, ADMIN_MUTATION_SERVICE.RUN_SCAN, action);
     case SUCCESS(ADMIN_ACTION_TYPE.CREATE_REVIEW_TASKS):
       return mutationResponse(state, ADMIN_MUTATION_SERVICE.CREATE_REVIEW_TASKS, action);
+    case ADMIN_ACTION_TYPE.SET_TASK_FORM_GATE:
+      return { ...state, taskFormGate: action.payload };
     default:
       return state;
   }
