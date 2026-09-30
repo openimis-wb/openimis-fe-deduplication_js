@@ -6,12 +6,12 @@ import { useModulesManager, useTranslations } from '@openimis/fe-core';
 import { MODULE_KEY } from '../../constants';
 import { isPermissionError, useGqlQuery } from '../../hooks';
 import { AUDIT_HEAD_QUERY } from '../../queries';
-import { chainHeadView } from '../../util/biometric';
+import { chainHeadOf, chainHeadView } from '../../util/biometric';
 import { StyledCard } from '../candidates/SubjectCard';
 
-// The newest event of the biometric audit chain: its sequence, its hash and
-// the event count. It states nothing about integrity; ChainStatusPanel shows
-// the server's verification.
+// The newest event of the whole biometric audit chain: its sequence, its hash and
+// the count of every event, whatever the caller's location scope. It states nothing
+// about integrity; ChainStatusPanel shows the server's verification.
 function ChainHeadPanel() {
   const modulesManager = useModulesManager();
   const { formatMessage, formatMessageWithValues, formatDateTimeFromISO } = useTranslations(
@@ -21,9 +21,8 @@ function ChainHeadPanel() {
   const {
     isLoading, data, errors, refetch,
   } = useGqlQuery(AUDIT_HEAD_QUERY, {});
-  const connection = data?.biometricAuditEvents;
-  const latest = connection?.edges?.[0]?.node ?? null;
-  const view = chainHeadView(latest, errors);
+  const head = chainHeadOf(data);
+  const view = chainHeadView(head, errors);
 
   let body;
   if (isLoading) {
@@ -45,8 +44,8 @@ function ChainHeadPanel() {
         <Typography variant="body2">
           {formatMessageWithValues('biometric.chain.head', {
             sequence: view.sequence,
-            count: connection?.totalCount ?? 0,
-            at: latest?.createdAt ? formatDateTimeFromISO(latest.createdAt) : '—',
+            count: head?.count ?? 0,
+            at: head?.createdAt ? formatDateTimeFromISO(head.createdAt) : '—',
           })}
         </Typography>
         <Typography variant="body2" component="div" sx={{ fontFamily: 'monospace', wordBreak: 'break-all', mt: 1 }}>

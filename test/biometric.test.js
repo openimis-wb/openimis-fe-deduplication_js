@@ -5,11 +5,13 @@ import {
   alertTransitions,
   auditActionFilter,
   auditFilterFragment,
+  chainHeadOf,
   chainHeadView,
   prettyJson,
   qualityVerdict,
 } from '../src/util/biometric.js';
 import { labelOr } from '../src/util/gql.js';
+import { AUDIT_HEAD_QUERY } from '../src/queries.js';
 
 test('qualityVerdict reads the verdict status only', () => {
   assert.deepEqual(qualityVerdict({ qualityVerdict: { status: 'ACCEPTED', reasons: [] } }), {
@@ -40,6 +42,26 @@ test('chainHeadView reports the head and never an intact chain', () => {
   const kinds = [chainHeadView(null), chainHeadView({ sequence: 1, hash: 'h' }), chainHeadView(null, 'e')]
     .map((view) => view.kind);
   assert.ok(!kinds.includes('intact'));
+});
+
+test('the head panel reads the unscoped chain head, not the scoped event list', () => {
+  assert.match(AUDIT_HEAD_QUERY, /biometricAuditChainHead\s*\{\s*headSequence headHash eventCount createdAt\s*\}/);
+  assert.doesNotMatch(AUDIT_HEAD_QUERY, /biometricAuditEvents/);
+});
+
+test('chainHeadOf maps the chain head for chainHeadView and keeps the global count', () => {
+  const head = chainHeadOf({
+    biometricAuditChainHead: {
+      headSequence: 42, headHash: 'abc', eventCount: 42, createdAt: '2026-09-30T06:00:00',
+    },
+  });
+  assert.deepEqual(head, {
+    sequence: 42, hash: 'abc', count: 42, createdAt: '2026-09-30T06:00:00',
+  });
+  assert.deepEqual(chainHeadView(head, null), { kind: 'head', sequence: 42, hash: 'abc' });
+  assert.equal(chainHeadOf({ biometricAuditChainHead: null }), null);
+  assert.equal(chainHeadOf(null), null);
+  assert.equal(chainHeadView(chainHeadOf({ biometricAuditChainHead: null }), null).kind, 'empty');
 });
 
 test('auditActionFilter escapes the action', () => {

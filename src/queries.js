@@ -150,10 +150,7 @@ export const INDIVIDUAL_SUBJECT_QUERY = `query DeduplicationIndividualSubject($i
 }`;
 
 export const AUDIT_HEAD_QUERY = `query BiometricAuditHead {
-  biometricAuditEvents(first: 1, orderBy: ["-sequence"]) {
-    totalCount
-    edges { node { id sequence hash createdAt } }
-  }
+  biometricAuditChainHead { headSequence headHash eventCount createdAt }
 }`;
 
 export const CANDIDATE_STATUS_QUERY = `query DuplicateCandidateStatus($id: ID) {
