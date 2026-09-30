@@ -40,15 +40,3 @@ export function useMutationSettled(actionTypes, onSettled) {
     dispatch(awaitMutationLog(mutation.clientMutationId)).then((log) => callback.current?.(log, mutation));
   }, [submittingMutation, mutation, types, dispatch]);
 }
-
-// The first error detail of a failed mutation log, when the server recorded one.
-export function mutationLogError(log) {
-  if (!log || log.status !== 1 || !log.error) return null;
-  try {
-    const parsed = typeof log.error === 'string' ? JSON.parse(log.error) : log.error;
-    const first = Array.isArray(parsed) ? parsed[0] : parsed;
-    return first?.detail || first?.message || String(log.error);
-  } catch {
-    return String(log.error);
-  }
-}
