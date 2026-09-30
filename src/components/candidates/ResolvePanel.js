@@ -130,6 +130,7 @@ function ResolvePanel({ candidate, pairState, submitting }) {
         ))}
       </RadioGroup>
       <TextField
+        id="duplicate-candidate-resolve-note"
         fullWidth
         multiline
         minRows={2}

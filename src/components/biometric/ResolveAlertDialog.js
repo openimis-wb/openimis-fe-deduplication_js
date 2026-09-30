@@ -44,6 +44,7 @@ function ResolveAlertDialog({
       <DialogContent>
         {alert && <Typography variant="body2" gutterBottom>{title || alert.title}</Typography>}
         <TextField
+          id="biometric-alert-resolve-note"
           fullWidth
           multiline
           minRows={3}
