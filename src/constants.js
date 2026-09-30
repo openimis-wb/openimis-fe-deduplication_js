@@ -50,7 +50,9 @@ export const ALERT_SEVERITIES = ['LOW', 'MEDIUM', 'HIGH'];
 export const DEFAULT_ALERT_RULE_KINDS = ['FAILED_VERIFICATIONS', 'IMPERSONATION_SUSPECTED', 'ACCESS_BURST'];
 export const AUDIT_ACTIONS = [
   'template.enrol',
+  'template.enrol_refused',
   'verify',
+  'verify.multimodal',
   'identify',
   'impersonation.suspected',
   'template.consolidate',
