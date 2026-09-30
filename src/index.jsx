@@ -13,6 +13,7 @@ import {
   DuplicateCandidateTaskItemFormatters,
   DuplicateCandidateTaskTableHeaders,
 } from './components/tasks/DuplicateCandidateTask';
+import DuplicateCandidateTaskConfirmation from './components/tasks/DuplicateCandidateTaskConfirmation';
 import DuplicateCandidatesPage from './pages/DuplicateCandidatesPage';
 import DuplicateCandidatePage from './pages/DuplicateCandidatePage';
 import BiometricAlertsPage from './pages/BiometricAlertsPage';
@@ -70,6 +71,7 @@ const DEFAULT_CONFIG = {
     text: <FormattedMessage module="deduplication" id="tasks.candidate.title" />,
     tableHeaders: DuplicateCandidateTaskTableHeaders,
     itemFormatters: DuplicateCandidateTaskItemFormatters,
+    confirmationPanel: DuplicateCandidateTaskConfirmation,
     taskSource: [CANDIDATE_TASK_SOURCE],
   }],
   'core.MainMenu': [{

@@ -1,7 +1,9 @@
 // Pure helpers for the deduplication_candidate task formatter.
 /* eslint-disable import/extensions -- node --test resolves ESM imports only with the extension */
 import { isEmptyValue, isPlainObject } from './gql.js';
-import { DECISION_SAME, STATUS_OPEN, validateResolution } from './candidates.js';
+import {
+  DECISION_SAME, OPEN_TASK_STATUSES, STATUS_OPEN, validateResolution,
+} from './candidates.js';
 
 export const TASK_FORM_RECORDED = 'recorded';
 export const TASK_FORM_RESOLVED_ELSEWHERE = 'resolvedElsewhere';
@@ -14,15 +16,59 @@ export function encodeAdditionalData(obj) {
   return JSON.stringify(JSON.stringify(obj)).slice(1, -1);
 }
 
-// The decision a completed task recorded. Task resolution stores it under
-// json_ext.additional_resolve_data keyed by user id; the first entry is read.
-export function decodeCompletedResolution(jsonExt) {
-  if (!isPlainObject(jsonExt)) return null;
-  const recorded = jsonExt.additional_resolve_data;
-  if (!isPlainObject(recorded)) return null;
-  const values = Object.values(recorded);
-  if (!values.length || !isPlainObject(values[0])) return null;
-  return values[0];
+export const TASK_STATUS_COMPLETED = 'COMPLETED';
+export const TASK_STATUS_ACCEPTED = 'ACCEPTED';
+
+// Every approver's stored decision as [{ userId, resolution }]. Task resolution
+// stores one entry per approver under json_ext.additional_resolve_data, keyed by
+// the id of the core user who resolved the task.
+function storedResolutions(jsonExt) {
+  if (!isPlainObject(jsonExt) || !isPlainObject(jsonExt.additional_resolve_data)) return [];
+  return Object.entries(jsonExt.additional_resolve_data)
+    .filter(([, resolution]) => isPlainObject(resolution))
+    .map(([userId, resolution]) => ({ userId, resolution }));
+}
+
+// The decision stored under `userId`, the user completing the task being the one
+// whose entry the server applies. Null without a user id or a usable entry.
+export function ownResolution(jsonExt, userId) {
+  if (isEmptyValue(userId)) return null;
+  return storedResolutions(jsonExt).find((entry) => entry.userId === String(userId))?.resolution ?? null;
+}
+
+// The stored decisions of the approvers other than `userId`.
+export function otherResolutions(jsonExt, userId) {
+  return storedResolutions(jsonExt).filter((entry) => isEmptyValue(userId) || entry.userId !== String(userId));
+}
+
+// The stored decisions of a COMPLETED task, shown as final; null while the task
+// can still be resolved again, since a refused completion leaves them on it.
+export function finalResolutions(jsonExt, taskStatus) {
+  if (taskStatus !== TASK_STATUS_COMPLETED) return null;
+  const entries = storedResolutions(jsonExt);
+  return entries.length ? entries : null;
+}
+
+// True while the task still awaits a decision, so a stored one is not applied yet.
+export function taskAwaitsDecision(taskStatus) {
+  return OPEN_TASK_STATUSES.includes(taskStatus);
+}
+
+// Whether the approve and reject buttons of a candidate task can be used. A
+// refused completion leaves the approver in the task's business status, which
+// disables the stock buttons for good; only the task status and a resolve in
+// flight gate these.
+export function canSubmitTaskResolution(taskStatus, submitting) {
+  return taskStatus === TASK_STATUS_ACCEPTED && !submitting;
+}
+
+// The form fields a stored decision pre-fills.
+export function formStateFromResolution(resolution) {
+  return {
+    decision: resolution?.decision ?? null,
+    keep: resolution?.keep ?? null,
+    note: resolution?.note ?? '',
+  };
 }
 
 // The additional data the task bridge passes to resolve(); `candidateData` is
@@ -35,10 +81,11 @@ export function buildTaskResolution({ decision, keep, note }, candidateData) {
   return resolution;
 }
 
-// Mode of the task form. A decision the task recorded wins; otherwise a status
-// query refused for lack of rights closes the form, and a candidate whose
-// current status is not OPEN was resolved elsewhere. A null `currentCandidate`
-// that was not refused (still loading, or unreadable) leaves the form open.
+// Mode of the task form. `recorded` is the final resolution of a COMPLETED task
+// and wins; otherwise a status query refused for lack of rights closes the form,
+// and a candidate whose current status is not OPEN was resolved elsewhere. A null
+// `currentCandidate` that was not refused (still loading, or unreadable) leaves
+// the form open.
 export function taskFormMode(recorded, currentCandidate, { statusRefused = false } = {}) {
   if (recorded) return TASK_FORM_RECORDED;
   if (statusRefused) return TASK_FORM_NO_RIGHT;
