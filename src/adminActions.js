@@ -121,6 +121,11 @@ export function createDuplicateReviewTasks(uuids, clientMutationLabel) {
   );
 }
 
+// Publishes the task form's state to the approve and reject buttons (see taskFormGate).
+export function setTaskFormGate(gate) {
+  return { type: ADMIN_ACTION_TYPE.SET_TASK_FORM_GATE, payload: gate };
+}
+
 // Polls the mutation log until the asynchronous mutation leaves the pending
 // state or the attempts run out. Resolves to the log node, or null.
 export function awaitMutationLog(clientMutationId) {

@@ -11,7 +11,8 @@ import {
 } from '@mui/material';
 import { useModulesManager, useTranslations } from '@openimis/fe-core';
 import { useIntl } from 'react-intl';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { setTaskFormGate } from '../../adminActions';
 import { MODULE_KEY } from '../../constants';
 import { isPermissionError, useGqlQuery } from '../../hooks';
 import { CANDIDATE_STATUS_QUERY, PAIR_STATUS_QUERY, USERNAME_QUERY } from '../../queries';
@@ -32,6 +33,7 @@ import {
   ownResolution,
   taskAdditionalData,
   taskAwaitsDecision,
+  taskFormGate,
   taskFormMode,
 } from '../../util/taskResolveData';
 import SubjectCard from '../candidates/SubjectCard';
@@ -66,6 +68,7 @@ function StoredResolution({ userId, resolution, own }) {
 // is otherwise unreadable, the form stays open.
 function DuplicateCandidateTaskDisplay({ businessData, jsonExt, setAdditionalData }) {
   const intl = useIntl();
+  const dispatch = useDispatch();
   const modulesManager = useModulesManager();
   const { formatMessage, formatMessageWithValues, formatDateTimeFromISO } = useTranslations(
     MODULE_KEY,
@@ -117,6 +120,14 @@ function DuplicateCandidateTaskDisplay({ businessData, jsonExt, setAdditionalDat
     const additionalData = taskAdditionalData(mode, { decision, keep, note }, data, { canDismiss });
     if (additionalData !== undefined) setAdditionalData(additionalData);
   }, [decision, keep, note, mode, canDismiss]);
+
+  React.useEffect(() => {
+    dispatch(setTaskFormGate(taskFormGate(mode)));
+  }, [mode]);
+
+  React.useEffect(() => () => {
+    dispatch(setTaskFormGate(taskFormGate(TASK_FORM_OPEN)));
+  }, []);
 
   if (!isPlainObject(data) || !data.subject_a || !data.subject_b) return null;
 

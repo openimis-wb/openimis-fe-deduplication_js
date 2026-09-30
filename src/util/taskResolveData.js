@@ -62,6 +62,20 @@ export function canSubmitTaskResolution(taskStatus, submitting) {
   return taskStatus === TASK_STATUS_ACCEPTED && !submitting;
 }
 
+// What the task form tells the approve and reject buttons, which live in another
+// component: in no-right mode neither may be used.
+export function taskFormGate(mode) {
+  return { noRight: mode === TASK_FORM_NO_RIGHT };
+}
+
+export function canApproveTask(taskStatus, submitting, gate) {
+  return canSubmitTaskResolution(taskStatus, submitting) && !gate?.noRight;
+}
+
+export function canRejectTask(taskStatus, submitting, gate) {
+  return canSubmitTaskResolution(taskStatus, submitting) && !gate?.noRight;
+}
+
 // The form fields a stored decision pre-fills.
 export function formStateFromResolution(resolution) {
   return {
