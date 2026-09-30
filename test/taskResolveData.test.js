@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  TASK_FORM_NO_RIGHT,
   TASK_FORM_OPEN,
   TASK_FORM_RECORDED,
   TASK_FORM_RESOLVED_ELSEWHERE,
@@ -92,4 +93,17 @@ test('taskAdditionalData leaves a recorded task or unreadable business data unto
   );
   assert.equal(taskAdditionalData(TASK_FORM_OPEN, filledForm, null), undefined);
   assert.equal(taskAdditionalData(TASK_FORM_RESOLVED_ELSEWHERE, filledForm, 'x'), undefined);
+});
+
+test('taskFormMode closes the form when reading the candidate status is refused', () => {
+  assert.equal(taskFormMode(null, null, { statusRefused: true }), TASK_FORM_NO_RIGHT);
+  assert.equal(taskFormMode(null, undefined, { statusRefused: true }), TASK_FORM_NO_RIGHT);
+});
+
+test('taskFormMode still shows a recorded decision when the status query is refused', () => {
+  assert.equal(taskFormMode(recordedSame, null, { statusRefused: true }), TASK_FORM_RECORDED);
+});
+
+test('taskAdditionalData sends no decision when the candidate status is refused', () => {
+  assert.equal(taskAdditionalData(TASK_FORM_NO_RIGHT, filledForm, businessData), null);
 });

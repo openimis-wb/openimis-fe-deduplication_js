@@ -102,6 +102,7 @@
     "deduplication.tasks.candidate.summary": "{kind} : {evidence}",
     "deduplication.tasks.candidate.decision": "Décision",
     "deduplication.tasks.candidate.incomplete": "Choisissez une décision, et la fiche à conserver en cas de fusion, avant de valider la tâche.",
+    "deduplication.tasks.candidate.notReadable": "Vos droits ne comprennent pas la consultation des doublons potentiels (172005) : l'état de cette paire ne peut pas être vérifié. Aucune décision ne peut être consignée depuis cette tâche.",
     "deduplication.tasks.candidate.alreadyResolved": "Cette paire est déjà tranchée ({status}) par {by} le {at}. Valider cette tâche ne consigne aucune décision.",
     "deduplication.tasks.candidate.recorded.same": "Décision consignée : fusion, fiche conservée {keep}. Commentaire : {note}",
     "deduplication.tasks.candidate.recorded.different": "Décision consignée : écarté. Commentaire : {note}",
