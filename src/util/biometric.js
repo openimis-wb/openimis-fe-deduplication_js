@@ -31,6 +31,19 @@ export function alertTransitions(alert) {
   };
 }
 
+// The whole chain's head from biometricAuditChainHead, as { sequence, hash, count,
+// createdAt }; null while the chain is empty or the answer is missing.
+export function chainHeadOf(data) {
+  const head = data?.biometricAuditChainHead;
+  if (!isPlainObject(head)) return null;
+  return {
+    sequence: head.headSequence ?? null,
+    hash: head.headHash ?? null,
+    count: head.eventCount ?? null,
+    createdAt: head.createdAt ?? null,
+  };
+}
+
 // What the audit head panel shows: the newest event's sequence and hash. It
 // reports the head only and never states that the chain is intact.
 export function chainHeadView(latestEvent, error) {
