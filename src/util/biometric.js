@@ -172,6 +172,31 @@ export function impersonationEvidence(alert) {
   };
 }
 
+const ALERT_LABEL_VALUES = {
+  FAILED_VERIFICATIONS: (detail) => ({ count: detail.attempts, minutes: detail.window_minutes }),
+  ACCESS_BURST: (detail) => ({ count: detail.events, minutes: detail.window_minutes }),
+  IMPERSONATION_SUSPECTED: (detail) => ({ modality: detail.modality }),
+};
+
+const LABEL_VALUE_CHECKS = {
+  count: (value) => typeof value === 'number' && Number.isFinite(value),
+  minutes: (value) => typeof value === 'number' && Number.isFinite(value),
+  modality: (value) => typeof value === 'string' && value !== '',
+};
+
+// The translatable label of an alert, { key, values }, built from its rule kind
+// and the parameters its detail carries; the counts are the latest occurrence's.
+// null for an unknown rule kind or a missing parameter: the server title is shown then.
+export function alertTitleMessage(alert) {
+  const build = ALERT_LABEL_VALUES[alert?.ruleKind];
+  if (!build) return null;
+  const detail = parseJson(alert.detail);
+  if (!isPlainObject(detail)) return null;
+  const values = build(detail);
+  if (!Object.entries(values).every(([name, value]) => LABEL_VALUE_CHECKS[name](value))) return null;
+  return { key: `biometric.alert.label.${alert.ruleKind}`, values };
+}
+
 const FUSION_RULE_FIELDS = [
   ['acceptThreshold', 'number'],
   ['reviewThreshold', 'number'],

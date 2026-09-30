@@ -12,7 +12,7 @@ import {
 } from '../../adminActions';
 import { MODULE_KEY } from '../../constants';
 import { alertTriageRights, rowsPerPageOptions } from '../../config';
-import { IMPERSONATION_RULE, alertTransitions } from '../../util/biometric';
+import { IMPERSONATION_RULE, alertTitleMessage, alertTransitions } from '../../util/biometric';
 import { hasAnyRight, labelOr, toUuid } from '../../util/gql';
 import { useAdminSlice } from '../common/adminHooks';
 import { useAdminStyles } from '../common/adminStyles';
@@ -60,6 +60,15 @@ function BiometricAlertSearcher({ rights }) {
   };
 
   const ruleLabel = (kind) => labelOr(intl.messages, `${MODULE_KEY}.biometric.alert.rule.${kind}`, kind);
+  const modalityLabel = (modality) => labelOr(intl.messages, `${MODULE_KEY}.biometric.modality.${modality}`, modality);
+
+  // The label built from the rule and its parameters; the server's English title otherwise.
+  const alertTitle = (alert) => {
+    const label = alertTitleMessage(alert);
+    if (!label) return alert.title;
+    const { modality, ...values } = label.values;
+    return formatMessageWithValues(label.key, modality ? { ...values, modality: modalityLabel(modality) } : values);
+  };
 
   const headers = () => [
     'biometric.alert.severity',
@@ -93,7 +102,7 @@ function BiometricAlertSearcher({ rights }) {
         label={formatMessage(`biometric.alert.severity.${a.severity}`)}
       />
     ),
-    (a) => a.title,
+    (a) => alertTitle(a),
     (a) => ruleLabel(a.ruleKind),
     (a) => (a.subjectId ? `${a.subjectModel} ${a.subjectId}` : '—'),
     (a) => a.occurrences,
@@ -162,7 +171,12 @@ function BiometricAlertSearcher({ rights }) {
         defaultOrderBy="-triggeredAt"
         rowIdentifier={(a) => a.id}
       />
-      <ResolveAlertDialog alert={resolving} onClose={() => setResolving(null)} onSubmit={resolve} />
+      <ResolveAlertDialog
+        alert={resolving}
+        title={resolving ? alertTitle(resolving) : null}
+        onClose={() => setResolving(null)}
+        onSubmit={resolve}
+      />
       <ImpersonationEvidenceDialog alert={inspecting} onClose={() => setInspecting(null)} />
     </>
   );

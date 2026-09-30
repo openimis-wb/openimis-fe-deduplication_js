@@ -14,7 +14,10 @@ import { useModulesManager, useTranslations } from '@openimis/fe-core';
 import { MODULE_KEY } from '../../constants';
 
 // Collects the resolution note; onSubmit(note) returns the server error text or null.
-function ResolveAlertDialog({ alert, onClose, onSubmit }) {
+// `title` is the alert's translated label; the server title is shown without it.
+function ResolveAlertDialog({
+  alert, title, onClose, onSubmit,
+}) {
   const modulesManager = useModulesManager();
   const { formatMessage } = useTranslations(MODULE_KEY, modulesManager);
   const [note, setNote] = React.useState('');
@@ -39,7 +42,7 @@ function ResolveAlertDialog({ alert, onClose, onSubmit }) {
     <Dialog open={!!alert} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>{formatMessage('biometric.alert.resolve.title')}</DialogTitle>
       <DialogContent>
-        {alert && <Typography variant="body2" gutterBottom>{alert.title}</Typography>}
+        {alert && <Typography variant="body2" gutterBottom>{title || alert.title}</Typography>}
         <TextField
           fullWidth
           multiline
