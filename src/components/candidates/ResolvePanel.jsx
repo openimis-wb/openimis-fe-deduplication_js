@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useIntl } from 'react-intl';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Alert,
@@ -15,16 +16,22 @@ import {
 } from '@openimis/fe-core';
 import { resolveDuplicateCandidate } from '../../adminActions';
 import { MODULE_KEY } from '../../constants';
+import { useResolveCheck } from '../../hooks';
 import { DECISION_DIFFERENT, DECISION_SAME, keepOptions } from '../../util/candidates';
 import { toUuid } from '../../util/gql';
+import { checkBlocksDecision, checkRefusalText } from '../../util/resolveCheck';
 import { StyledCard } from './SubjectCard';
 
 // Resolve controls of an OPEN candidate. The kept subject is always chosen
 // explicitly; when another kind of this pair was already merged, keep is locked
 // to the subject that merge kept, and merging is blocked when that subject is unknown.
-// Such a pair can no longer be dismissed as different persons.
+// Such a pair can no longer be dismissed as different persons. Each decision is
+// checked with the server as soon as it can be taken (the merge once a record to
+// keep is chosen), and its button stays disabled, with the refusal shown, while the
+// server would refuse it.
 function ResolvePanel({ candidate, pairState, submitting }) {
   const dispatch = useDispatch();
+  const intl = useIntl();
   const modulesManager = useModulesManager();
   const { formatMessage, formatMessageWithValues } = useTranslations(MODULE_KEY, modulesManager);
   const confirmed = useSelector((state) => state.core?.confirmed);
@@ -36,7 +43,24 @@ function ResolvePanel({ candidate, pairState, submitting }) {
   const locked = pairState.mergedAlready;
   const lockedKeep = locked ? pairState.keptId : null;
   const effectiveKeep = locked ? lockedKeep : keep;
-  const canMerge = !submitting && !!effectiveKeep && !pairState.conflictingKeep(effectiveKeep);
+  const candidateId = toUuid(candidate.id);
+  const checkSame = useResolveCheck({
+    candidateId,
+    decision: DECISION_SAME,
+    keep: effectiveKeep,
+    subjectA: candidate.subjectA,
+    subjectB: candidate.subjectB,
+  });
+  const checkDifferent = useResolveCheck({
+    candidateId,
+    decision: DECISION_DIFFERENT,
+    subjectA: candidate.subjectA,
+    subjectB: candidate.subjectB,
+  });
+  const refusalSame = checkRefusalText(checkSame, intl.messages);
+  const refusalDifferent = pairState.canDismiss ? checkRefusalText(checkDifferent, intl.messages) : null;
+  const canMerge = !submitting && !!effectiveKeep && !pairState.conflictingKeep(effectiveKeep)
+    && !checkBlocksDecision(checkSame);
 
   React.useEffect(() => {
     if (!pending || confirmed === null || confirmed === undefined) return;
@@ -110,6 +134,9 @@ function ResolvePanel({ candidate, pairState, submitting }) {
         value={note}
         onChange={(e) => setNote(e.target.value)}
       />
+      {[refusalSame, refusalDifferent].filter(Boolean).map((text) => (
+        <Alert severity="warning" sx={{ mt: 1 }} key={text}>{text}</Alert>
+      ))}
       {error && <Alert severity="error" sx={{ mt: 1 }}>{error}</Alert>}
       <Box display="flex" gap={1} mt={2} flexWrap="wrap">
         <Button variant="contained" color="primary" disabled={!canMerge} onClick={() => ask(DECISION_SAME)}>
@@ -117,7 +144,7 @@ function ResolvePanel({ candidate, pairState, submitting }) {
         </Button>
         <Button
           variant="outlined"
-          disabled={submitting || !pairState.canDismiss}
+          disabled={submitting || !pairState.canDismiss || checkBlocksDecision(checkDifferent)}
           onClick={() => ask(DECISION_DIFFERENT)}
         >
           {formatMessage('resolve.different')}

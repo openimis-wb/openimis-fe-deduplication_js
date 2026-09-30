@@ -14,7 +14,7 @@ import { useIntl } from 'react-intl';
 import { useDispatch, useSelector } from 'react-redux';
 import { setTaskFormGate } from '../../adminActions';
 import { MODULE_KEY } from '../../constants';
-import { isPermissionError, useGqlQuery } from '../../hooks';
+import { isPermissionError, useGqlQuery, useResolveCheck } from '../../hooks';
 import { CANDIDATE_STATUS_QUERY, PAIR_STATUS_QUERY, USERNAME_QUERY } from '../../queries';
 import {
   DECISION_DIFFERENT, DECISION_SAME, evidenceRows, siblingState,
@@ -22,6 +22,7 @@ import {
 import {
   isPlainObject, isUuid, labelOr, parseJson,
 } from '../../util/gql';
+import { CHECK_NO_RIGHT, checkBlocksApproval, checkRefusalText } from '../../util/resolveCheck';
 import {
   TASK_FORM_NO_RIGHT,
   TASK_FORM_OPEN,
@@ -63,9 +64,12 @@ function StoredResolution({ userId, resolution, own }) {
 // stays editable and starts from the current user's own stored entry, since a
 // refused completion leaves the entries on the task; only a COMPLETED task shows
 // them as final. A candidate already resolved elsewhere turns the form read-only
-// and sends no decision. When reading its status is refused for lack of rights,
-// the form says so, disables its controls and sends no decision; when the status
-// is otherwise unreadable, the form stays open.
+// and sends no decision. When reading its status or checking the decision is
+// refused for lack of rights, the form says so, disables its controls and sends no
+// decision; when the status is otherwise unreadable, the form stays open. While the
+// server's check refuses the decision, or has not answered, the form shows the
+// refusal and keeps the approve button disabled: the task tool reports a refused
+// completion as a success and never tells the approver why.
 function DuplicateCandidateTaskDisplay({ businessData, jsonExt, setAdditionalData }) {
   const intl = useIntl();
   const dispatch = useDispatch();
@@ -111,7 +115,22 @@ function DuplicateCandidateTaskDisplay({ businessData, jsonExt, setAdditionalDat
     (pairData?.duplicateCandidates?.edges ?? []).map((edge) => edge?.node),
   );
   const { canDismiss } = pairState;
-  const mode = taskFormMode(recorded, current, { statusRefused: isPermissionError(statusErrors) });
+  const statusRefused = isPermissionError(statusErrors);
+  // The server's verdict on the decision is asked only while the form is open; a verdict
+  // refused for lack of rights closes it like an unreadable status.
+  const check = useResolveCheck({
+    candidateId: candidateUuid,
+    decision,
+    keep,
+    subjectA: data?.subject_a,
+    subjectB: data?.subject_b,
+    active: taskFormMode(recorded, current, { statusRefused }) === TASK_FORM_OPEN,
+  });
+  const mode = taskFormMode(recorded, current, {
+    statusRefused, checkRefused: check.status === CHECK_NO_RIGHT,
+  });
+  const refusal = checkRefusalText(check, intl.messages);
+  const approvalBlocked = checkBlocksApproval(check);
   const resolvedElsewhere = mode === TASK_FORM_RESOLVED_ELSEWHERE;
   const noRight = mode === TASK_FORM_NO_RIGHT;
 
@@ -122,8 +141,8 @@ function DuplicateCandidateTaskDisplay({ businessData, jsonExt, setAdditionalDat
   }, [decision, keep, note, mode, canDismiss]);
 
   React.useEffect(() => {
-    dispatch(setTaskFormGate(taskFormGate(mode)));
-  }, [mode]);
+    dispatch(setTaskFormGate(taskFormGate(mode, { approvalBlocked })));
+  }, [mode, approvalBlocked]);
 
   React.useEffect(() => () => {
     dispatch(setTaskFormGate(taskFormGate(TASK_FORM_OPEN)));
@@ -246,6 +265,7 @@ function DuplicateCandidateTaskDisplay({ businessData, jsonExt, setAdditionalDat
             disabled={noRight}
             onChange={(e) => setNote(e.target.value)}
           />
+          {refusal && !noRight && <Alert severity="error">{refusal}</Alert>}
           {!valid && !noRight && <Alert severity="warning">{formatMessage('tasks.candidate.incomplete')}</Alert>}
         </Box>
       )}
