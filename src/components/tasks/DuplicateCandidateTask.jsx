@@ -256,6 +256,7 @@ function DuplicateCandidateTaskDisplay({ businessData, jsonExt, setAdditionalDat
             </>
           )}
           <TextField
+            id="duplicate-candidate-task-note"
             fullWidth
             multiline
             minRows={2}
