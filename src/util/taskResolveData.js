@@ -63,10 +63,14 @@ export function canSubmitTaskResolution(taskStatus, submitting) {
 }
 
 // What the task form tells the approve and reject buttons, which live in another
-// component: in no-right mode neither may be used, and while the server's resolve
-// check refuses the decision (or has not answered) the approval may not.
-export function taskFormGate(mode, { approvalBlocked = false } = {}) {
-  return { noRight: mode === TASK_FORM_NO_RIGHT, approvalBlocked };
+// component: in no-right mode neither may be used; the approval may not while the
+// server's resolve check refuses the decision (or has not answered), nor, on an open
+// form, while no decision is chosen (taskDecisionMissing).
+export function taskFormGate(mode, { approvalBlocked = false, decisionMissing = false } = {}) {
+  return {
+    noRight: mode === TASK_FORM_NO_RIGHT,
+    approvalBlocked: approvalBlocked || (mode === TASK_FORM_OPEN && decisionMissing),
+  };
 }
 
 export function canApproveTask(taskStatus, submitting, gate) {
@@ -123,4 +127,12 @@ export function taskAdditionalData(mode, { decision, keep, note }, candidateData
   } catch {
     return null;
   }
+}
+
+// True when an open form would send no decision (taskAdditionalData is not a string):
+// none chosen, « Même personne » without a record of the pair to keep, or a dismissal
+// the pair no longer allows.
+export function taskDecisionMissing({ decision, keep, note }, candidateData, { canDismiss = true } = {}) {
+  const additionalData = taskAdditionalData(TASK_FORM_OPEN, { decision, keep, note }, candidateData, { canDismiss });
+  return typeof additionalData !== 'string';
 }

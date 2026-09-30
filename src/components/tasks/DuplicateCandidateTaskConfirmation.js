@@ -19,7 +19,8 @@ const useStyles = makeStyles((theme) => ({
 // ones: those stay disabled for an approver already in the task's business status,
 // which is the case after a completion the server refused. `defaultAction` opens the
 // stock confirmation and sends the resolve with the form's decision. Both buttons
-// stay disabled while the task form is in no-right mode.
+// stay disabled while the task form is in no-right mode; approve also stays disabled
+// while the form holds no complete decision or the server's check refuses it.
 function DuplicateCandidateTaskConfirmation({ defaultAction }) {
   const classes = useStyles();
   const modulesManager = useModulesManager();

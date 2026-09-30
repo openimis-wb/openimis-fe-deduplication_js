@@ -16,6 +16,7 @@ import {
   canSubmitTaskResolution,
   taskAwaitsDecision,
   taskAdditionalData,
+  taskDecisionMissing,
   taskFormGate,
   taskFormMode,
 } from '../src/util/taskResolveData.js';
@@ -257,4 +258,32 @@ test('a resolve check refused for lack of rights closes the form like a refused 
   assert.equal(taskFormMode(null, { status: 'OPEN' }, { checkRefused: true }), TASK_FORM_NO_RIGHT);
   assert.equal(taskFormMode(null, null, { checkRefused: true }), TASK_FORM_NO_RIGHT);
   assert.equal(taskFormMode([{ userId: 'u' }], { status: 'OPEN' }, { checkRefused: true }), TASK_FORM_RECORDED);
+});
+
+test('taskDecisionMissing is true whenever the form would send the server no decision', () => {
+  assert.equal(taskDecisionMissing({ decision: null, keep: null, note: '' }, businessData), true);
+  assert.equal(taskDecisionMissing({ decision: 'same', keep: null, note: 'x' }, businessData), true);
+  assert.equal(taskDecisionMissing({ decision: 'same', keep: C, note: '' }, businessData), true);
+  assert.equal(taskDecisionMissing({ decision: 'same', keep: A, note: '' }, businessData), false);
+  assert.equal(taskDecisionMissing({ decision: 'different', keep: null, note: '' }, businessData), false);
+  assert.equal(
+    taskDecisionMissing({ decision: 'different', keep: null, note: '' }, businessData, { canDismiss: false }),
+    true,
+  );
+});
+
+test('taskFormGate blocks the approval, not the rejection, while no decision is chosen on an open form', () => {
+  const gate = taskFormGate(TASK_FORM_OPEN, { decisionMissing: true });
+  assert.deepEqual(gate, { noRight: false, approvalBlocked: true });
+  assert.equal(canApproveTask('ACCEPTED', false, gate), false);
+  assert.equal(canRejectTask('ACCEPTED', false, gate), true);
+  const chosen = taskFormGate(TASK_FORM_OPEN, { decisionMissing: false });
+  assert.equal(canApproveTask('ACCEPTED', false, chosen), true);
+});
+
+test('a missing decision leaves the approval open once the candidate is resolved elsewhere', () => {
+  [TASK_FORM_RESOLVED_ELSEWHERE, TASK_FORM_RECORDED].forEach((mode) => {
+    assert.deepEqual(taskFormGate(mode, { decisionMissing: true }), { noRight: false, approvalBlocked: false }, mode);
+  });
+  assert.deepEqual(taskFormGate(TASK_FORM_NO_RIGHT, { decisionMissing: true }).noRight, true);
 });

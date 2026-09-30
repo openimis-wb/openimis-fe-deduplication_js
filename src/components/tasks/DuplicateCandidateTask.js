@@ -34,6 +34,7 @@ import {
   ownResolution,
   taskAdditionalData,
   taskAwaitsDecision,
+  taskDecisionMissing,
   taskFormGate,
   taskFormMode,
 } from '../../util/taskResolveData';
@@ -69,7 +70,8 @@ function StoredResolution({ userId, resolution, own }) {
 // decision; when the status is otherwise unreadable, the form stays open. While the
 // server's check refuses the decision, or has not answered, the form shows the
 // refusal and keeps the approve button disabled: the task tool reports a refused
-// completion as a success and never tells the approver why.
+// completion as a success and never tells the approver why. The approve button also
+// stays disabled on an open form until a complete decision is chosen.
 function DuplicateCandidateTaskDisplay({ businessData, jsonExt, setAdditionalData }) {
   const intl = useIntl();
   const dispatch = useDispatch();
@@ -131,6 +133,7 @@ function DuplicateCandidateTaskDisplay({ businessData, jsonExt, setAdditionalDat
   });
   const refusal = checkRefusalText(check, intl.messages);
   const approvalBlocked = checkBlocksApproval(check);
+  const decisionMissing = taskDecisionMissing({ decision, keep, note }, data, { canDismiss });
   const resolvedElsewhere = mode === TASK_FORM_RESOLVED_ELSEWHERE;
   const noRight = mode === TASK_FORM_NO_RIGHT;
 
@@ -141,8 +144,8 @@ function DuplicateCandidateTaskDisplay({ businessData, jsonExt, setAdditionalDat
   }, [decision, keep, note, mode, canDismiss]);
 
   React.useEffect(() => {
-    dispatch(setTaskFormGate(taskFormGate(mode, { approvalBlocked })));
-  }, [mode, approvalBlocked]);
+    dispatch(setTaskFormGate(taskFormGate(mode, { approvalBlocked, decisionMissing })));
+  }, [mode, approvalBlocked, decisionMissing]);
 
   React.useEffect(() => () => {
     dispatch(setTaskFormGate(taskFormGate(TASK_FORM_OPEN)));
